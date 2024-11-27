@@ -78,7 +78,7 @@ void GameWorld::UpdateWorld(float dt) {
 	}
 }
 
-bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, bool closestObject, GameObject* ignoreThis) const {
+bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, bool closestObject, GameObject* ignoreThis, LayerMask layermask) const {
 	//The simplest raycast just goes through each object and sees if there's a collision
 	RayCollision collision;
 
@@ -89,11 +89,17 @@ bool GameWorld::Raycast(Ray& r, RayCollision& closestCollision, bool closestObje
 		if (i == ignoreThis) {
 			continue;
 		}
+
+		// only check objects in the layermask
+		if ((1 << static_cast<int>(i->GetLayer()) & layermask) == 0) {
+			continue; // skip if the object is not in the layermask
+		}
+		
 		RayCollision thisCollision;
 		if (CollisionDetection::RayIntersection(r, *i, thisCollision)) {
 				
 			if (!closestObject) {	
-				closestCollision		= collision;
+				closestCollision		= thisCollision;
 				closestCollision.node = i;
 				return true;
 			}

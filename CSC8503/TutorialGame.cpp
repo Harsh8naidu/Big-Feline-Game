@@ -291,6 +291,8 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
 	floor->GetPhysicsObject()->SetInverseMass(0);
 	floor->GetPhysicsObject()->InitCubeInertia();
 
+	floor->SetLayer(Layer::IgnoreRaycast);
+
 	world->AddGameObject(floor);
 
 	return floor;
@@ -492,10 +494,11 @@ bool TutorialGame::SelectObject() {
 			Ray ray = CollisionDetection::BuildRayFromMouse(world->GetMainCamera());
 
 			RayCollision closestCollision;
-			if (world->Raycast(ray, closestCollision, true)) {
+			if (world->Raycast(ray, closestCollision, true, nullptr, IgnoreRaycastLayerMask)) {
 				selectionObject = (GameObject*)closestCollision.node;
 
 				selectionObject->GetRenderObject()->SetColour(Vector4(0, 1, 0, 1));
+				Debug::DrawLine(ray.GetPosition(), closestCollision.collidedAt, Vector4(1, 0, 0, 1), 2);
 				return true;
 			}
 			else {

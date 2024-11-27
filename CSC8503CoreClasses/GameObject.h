@@ -2,6 +2,9 @@
 #include "Transform.h"
 #include "CollisionVolume.h"
 
+// Header included later
+#include "Layer.h"
+
 using std::vector;
 
 namespace NCL::CSC8503 {
@@ -13,6 +16,15 @@ namespace NCL::CSC8503 {
 	public:
 		GameObject(const std::string& name = "");
 		~GameObject();
+
+		// Getter and setter for layer
+		void SetLayer(Layer layer) {
+			this->layer = static_cast<int>(layer); // Convert to int using static_cast
+		}
+
+		Layer GetLayer() const {
+			return static_cast<Layer>(layer);
+		}
 
 		void SetBoundingVolume(CollisionVolume* vol) {
 			boundingVolume = vol;
@@ -87,6 +99,8 @@ namespace NCL::CSC8503 {
 		std::string	name;
 
 		Vector3 broadphaseAABB;
+
+		int layer;
 	};
 }
 

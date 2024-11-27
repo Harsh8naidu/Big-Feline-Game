@@ -4,6 +4,7 @@
 #include "Ray.h"
 #include "CollisionDetection.h"
 #include "QuadTree.h"
+
 namespace NCL {
 		class Camera;
 		using Maths::Ray;
@@ -40,7 +41,7 @@ namespace NCL {
 				shuffleObjects = state;
 			}
 
-			bool Raycast(Ray& r, RayCollision& closestCollision, bool closestObject = false, GameObject* ignore = nullptr) const;
+			bool Raycast(Ray& r, RayCollision& closestCollision, bool closestObject = false, GameObject* ignore = nullptr, LayerMask layermask = -1) const;
 
 			virtual void UpdateWorld(float dt);
 
