@@ -533,9 +533,36 @@ void TutorialGame::MoveSelectedObject() {
 	Debug::Print("Click Force:" + std::to_string(forceMagnitude), Vector2(10, 20));
 	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 100.0f;
 
+	/*forceMagnitude += Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::W) ? (0.0f, 0.0f, 10.0f) : 0.0f;
+	forceMagnitude += Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::A) ? (-10.0f, 0.0f, 0.0f) : 0.0f;
+	forceMagnitude += Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::D) ? (10.0f, 0.0f, 0.0f) : 0.0f;
+	forceMagnitude += Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::S) ? (0.0f, 0.0f, -10.0f) : 0.0f;*/
+
+	
+
 	if (!selectionObject) {
 		return;//we haven't selected anything!
 	}
+
+	if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::W)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 10));
+	}
+	else if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::S)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -10));
+	}
+	else if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::A)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(-10, 0, 0));
+	}
+	else if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::D)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(10, 0, 0));
+	}
+	else if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::NUM8)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 10, 0));
+	}
+	else if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::NUM2)) {
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -10, 0));
+	}
+
 	//Push the selected object!
 	if (Window::GetMouse()->ButtonPressed(NCL::MouseButtons::Right)) {
 		Ray ray = CollisionDetection::BuildRayFromMouse(world->GetMainCamera());
