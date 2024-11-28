@@ -257,6 +257,17 @@ void PhysicsSystem::IntegrateAccel(float dt) {
 
 		linearVel += accel * dt; // integrate acceleration to get new velocity
 		object->SetLinearVelocity(linearVel);
+
+		// Angular stuff
+		Vector3 torque = object->GetTorque();
+		Vector3 angVel = object->GetAngularVelocity();
+
+		object->UpdateInertiaTensor(); // Update tensor vs orientation
+
+		Vector3 angAccel = object->GetInertiaTensor() * torque;
+
+		angVel += angAccel * dt; // integrate acceleration to get new velocity
+		object->SetAngularVelocity(angVel);
 	}
 
 }
@@ -291,6 +302,21 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 		// Linear damping
 		linearVel = linearVel * (1.0f - objectLinearDamping);
 		object->SetLinearVelocity(linearVel);
+
+		// Orientation stuff
+		Quaternion orientation = transform.GetOrientation();
+		Vector3 angVel = object->GetAngularVelocity();
+
+		orientation = orientation + (Quaternion(angVel * dt * 0.5f, 0.0) * orientation);
+		orientation.Normalise();
+
+		transform.SetOrientation(orientation);
+
+		// Angular damping
+		float frameAngularDamping = globalDamping * dt;
+		float objectAngularDamping = object->GetAngularDamping() * frameAngularDamping;
+		angVel = angVel * (1.0f - objectAngularDamping);
+		object->SetAngularVelocity(angVel);
 	}
 	
 }

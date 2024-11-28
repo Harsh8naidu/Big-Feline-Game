@@ -65,6 +65,15 @@ void PhysicsObject::InitSphereInertia() {
 	inverseInertia	= Vector3(i, i, i);
 }
 
+void PhysicsObject::InitHollowSphereInertia() {
+	float radius = Vector::GetMaxElement(transform->GetScale());
+	float i = (3.0f / 2.0f) * inverseMass / (radius * radius);
+
+	// Since it's a hollow sphere, the inertia tensor is uniform
+	inverseInertia = Vector3(i, i, i);
+}
+
+
 void PhysicsObject::UpdateInertiaTensor() {
 	Quaternion q = transform->GetOrientation();
 

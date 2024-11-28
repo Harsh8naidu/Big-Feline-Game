@@ -20,6 +20,14 @@ namespace NCL {
 				linearDamping = val;
 			}
 
+			float GetAngularDamping() const {
+				return angularDamping;
+			}
+
+			void SetAngularDamping(float val) {
+				angularDamping = val;
+			}
+
 			Vector3 GetLinearVelocity() const {
 				return linearVelocity;
 			}
@@ -66,6 +74,7 @@ namespace NCL {
 
 			void InitCubeInertia();
 			void InitSphereInertia();
+			void InitHollowSphereInertia();
 
 			void UpdateInertiaTensor();
 
@@ -92,6 +101,7 @@ namespace NCL {
 			Matrix3 inverseInteriaTensor;
 
 			float linearDamping;
+			float angularDamping;
 		};
 	}
 }
