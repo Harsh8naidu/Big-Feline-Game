@@ -279,7 +279,8 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 			continue; // No physics object for this game object
 		}
 		// Apply damping
-		float frameLinearDamping = object->GetLinearDamping();
+		float frameLinearDamping = globalDamping * dt;
+		float objectLinearDamping = object->GetLinearDamping() * frameLinearDamping;
 
 		Transform& transform = (*i)->GetTransform();
 		// Position stuff
@@ -288,7 +289,7 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 		position += linearVel * dt;
 		transform.SetPosition(position);
 		// Linear damping
-		linearVel = linearVel * frameLinearDamping;
+		linearVel = linearVel * (1.0f - objectLinearDamping);
 		object->SetLinearVelocity(linearVel);
 	}
 	
