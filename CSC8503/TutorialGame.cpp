@@ -322,6 +322,8 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	sphere->GetPhysicsObject()->SetInverseMass(inverseMass);
 	sphere->GetPhysicsObject()->InitSphereInertia();
 
+	sphere->GetPhysicsObject()->SetLinearDamping(1.0f - (0.4f * 0.1)); // 0.1 is the hardcoded dt value
+
 	world->AddGameObject(sphere);
 
 	return sphere;
@@ -342,6 +344,8 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 
 	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
 	cube->GetPhysicsObject()->InitCubeInertia();
+
+	cube->GetPhysicsObject()->SetLinearDamping(1.0f - (0.4f * 0.1)); // 0.1 is the hardcoded dt value
 
 	world->AddGameObject(cube);
 

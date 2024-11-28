@@ -12,6 +12,14 @@ namespace NCL {
 			PhysicsObject(Transform* parentTransform, const CollisionVolume* parentVolume);
 			~PhysicsObject();
 
+			float GetLinearDamping() const {
+				return linearDamping;
+			}
+
+			void SetLinearDamping(float val) {
+				linearDamping = val;
+			}
+
 			Vector3 GetLinearVelocity() const {
 				return linearVelocity;
 			}
@@ -82,6 +90,8 @@ namespace NCL {
 			Vector3 torque;
 			Vector3 inverseInertia;
 			Matrix3 inverseInteriaTensor;
+
+			float linearDamping;
 		};
 	}
 }
