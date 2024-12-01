@@ -264,6 +264,9 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
 
+	// Create a simple constraint to test the system
+	BridgeConstraintTest();
+
 	InitMixedGridWorld(15, 15, 3.5f, 3.5f);
 
 	InitGameExamples();
@@ -423,6 +426,41 @@ GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 	return apple;
 }
 
+void TutorialGame::BridgeConstraintTest()
+{
+	Vector3 cubeSize = Vector3(8, 8, 8);
+
+	float invCubeMass = 5; // how heavy the middle pieces are
+	int numLinks = 10; // how many links in the chain
+	float maxDistance = 30; // how far apart the links are
+	float cubeDistance = 20; // how far apart the cubes are
+
+	Vector3 startPos = Vector3(-90, 100, 0);
+
+	GameObject* start = AddCubeToWorld(startPos + Vector3(0, 0, 0), cubeSize, 0); // add the first cube
+	GameObject* end = AddCubeToWorld(startPos + Vector3((numLinks + 2) * cubeDistance, 0, 0), cubeSize, 0); // add the last cube
+
+	std::cout << "start" << start << " , " << "end" << end << std::endl;
+
+	GameObject* previous = start; // the previous cube is the start cube
+
+	for (int i = 0; i < numLinks; ++i) {
+		GameObject* block = AddCubeToWorld(startPos + Vector3((i + 1) * cubeDistance, 0, 0), cubeSize, invCubeMass); // add a cube
+		PositionConstraint* constraint = new PositionConstraint(previous, block, maxDistance); // create a constraint between the previous cube and the new cube
+		world->AddConstraint(constraint); // add the constraint to the world
+
+		// Draw debug line between the cubes
+		Debug::DrawLine(previous->GetTransform().GetPosition(), block->GetTransform().GetPosition(), Vector4(0, 0, 1, 1), 120);
+
+		previous = block; // the previous cube is now the new cube
+	}
+	PositionConstraint* constraint = new PositionConstraint(previous, end, maxDistance); // create a constraint between the last cube and the end cube
+	world->AddConstraint(constraint); // add the constraint to the world
+
+	// Draw debug line between the last cube and the end cube
+	Debug::DrawLine(previous->GetTransform().GetPosition(), end->GetTransform().GetPosition(), Vector4(0, 0, 1, 1), 120);
+}
+
 void TutorialGame::InitDefaultFloor() {
 	AddFloorToWorld(Vector3(0, -20, 0));
 }
@@ -539,13 +577,6 @@ line - after the third, they'll be able to twist under torque aswell.
 void TutorialGame::MoveSelectedObject() {
 	Debug::Print("Click Force:" + std::to_string(forceMagnitude), Vector2(10, 20));
 	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 100.0f;
-
-	/*forceMagnitude += Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::W) ? (0.0f, 0.0f, 10.0f) : 0.0f;
-	forceMagnitude += Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::A) ? (-10.0f, 0.0f, 0.0f) : 0.0f;
-	forceMagnitude += Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::D) ? (10.0f, 0.0f, 0.0f) : 0.0f;
-	forceMagnitude += Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::S) ? (0.0f, 0.0f, -10.0f) : 0.0f;*/
-
-	
 
 	if (!selectionObject) {
 		return;//we haven't selected anything!
