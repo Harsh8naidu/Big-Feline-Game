@@ -38,6 +38,8 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 	controller.MapAxis(3, "XLook");
 	controller.MapAxis(4, "YLook");
 
+	testStateObject = nullptr;
+
 	InitialiseAssets();
 }
 
@@ -144,6 +146,10 @@ void TutorialGame::UpdateGame(float dt) {
 
 	renderer->Render();
 	Debug::UpdateRenderables(dt);
+
+	if (testStateObject) {
+		testStateObject->Update(dt);
+	}
 }
 
 void TutorialGame::UpdateKeys() {
@@ -271,6 +277,8 @@ void TutorialGame::InitWorld() {
 
 	InitGameExamples();
 	InitDefaultFloor();
+
+	testStateObject = AddStateObjectToWorld(Vector3(0, 10, -10));
 }
 
 /*
@@ -459,6 +467,27 @@ void TutorialGame::BridgeConstraintTest()
 
 	// Draw debug line between the last cube and the end cube
 	Debug::DrawLine(previous->GetTransform().GetPosition(), end->GetTransform().GetPosition(), Vector4(0, 0, 1, 1), 120);
+}
+
+StateGameObject* TutorialGame::AddStateObjectToWorld(const Vector3& position)
+{
+	StateGameObject* apple = new StateGameObject();
+
+	SphereVolume* volume = new SphereVolume(0.5f);
+	apple->SetBoundingVolume((CollisionVolume*)volume);
+	apple->GetTransform()
+		.SetScale(Vector3(2, 2, 2))
+		.SetPosition(position);
+
+	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), bonusMesh, nullptr, basicShader));
+	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
+
+	apple->GetPhysicsObject()->SetInverseMass(1.0f);
+	apple->GetPhysicsObject()->InitSphereInertia();
+
+	world->AddGameObject(apple);
+
+	return apple;
 }
 
 void TutorialGame::InitDefaultFloor() {
