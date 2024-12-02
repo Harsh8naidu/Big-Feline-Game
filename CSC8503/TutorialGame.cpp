@@ -582,6 +582,8 @@ void TutorialGame::MoveSelectedObject() {
 		return;//we haven't selected anything!
 	}
 
+	float dt = Window::GetWindow()->GetTimer().GetTimeDeltaSeconds();
+
 	if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::W)) {
 		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 10));
 	}
