@@ -86,6 +86,8 @@ namespace NCL::CSC8503 {
 			return worldID;
 		}
 
+		virtual void GameObjectUpdate(float dt);
+
 	protected:
 		Transform			transform;
 

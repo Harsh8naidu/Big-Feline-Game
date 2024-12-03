@@ -49,3 +49,14 @@ void GameObject::UpdateBroadphaseAABB() {
 		broadphaseAABB = mat * halfSizes;
 	}
 }
+
+/* This would allow you to write subclasses to encapsulate any
+of the object construction or logic required for your game,
+whether it uses state machines, or its own custom logic just
+within its overridden Update method. */
+
+void NCL::CSC8503::GameObject::GameObjectUpdate(float dt)
+{
+	
+	
+}

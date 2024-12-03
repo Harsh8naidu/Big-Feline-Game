@@ -93,11 +93,11 @@ bool NavigationGrid::FindPath(const Vector3& from, const Vector3& to, Navigation
 		return false; //outside of map region!
 	}
 
-	GridNode* startNode = &allNodes[(fromZ * gridWidth) + fromX];
-	GridNode* endNode	= &allNodes[(toZ * gridWidth) + toX];
+	GridNode* startNode = &allNodes[(fromZ * gridWidth) + fromX]; // 2D to 1D array indexing
+	GridNode* endNode = &allNodes[(toZ * gridWidth) + toX];	// 2D to 1D array indexing
 
-	std::vector<GridNode*>  openList;
-	std::vector<GridNode*>  closedList;
+	std::vector<GridNode*>  openList; // could use a priority queue here...
+	std::vector<GridNode*>  closedList; // could use a priority queue here...
 
 	openList.push_back(startNode);
 
@@ -113,7 +113,7 @@ bool NavigationGrid::FindPath(const Vector3& from, const Vector3& to, Navigation
 		if (currentBestNode == endNode) {			//we've found the path!
 			GridNode* node = endNode;
 			while (node != nullptr) {
-				outPath.PushWaypoint(node->position);
+				outPath.PushWaypoint(node->position); // build up the path from the end
 				node = node->parent;
 			}
 			return true;
