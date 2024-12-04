@@ -201,6 +201,77 @@ void TestBehaviourTree() {
 	std::cout << "All done!" << std::endl;
 }
 
+class PauseScreen : public PushdownState {
+	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::U)) {
+			return PushdownResult::Pop;
+		}
+		return PushdownResult::NoChange;
+	}
+	void OnAwake() override {
+		std::cout << "Press U to unpause game" << std::endl;
+	}
+};
+
+class GameScreen : public PushdownState {
+	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+		pauseReminder -= dt;
+		if (pauseReminder < 0.0f) {
+			std::cout << "Coins mined: " << coinsMined << std::endl;
+			std::cout << "Press P to pause game, or F1 to return to main menu" << std::endl;
+			pauseReminder += 1.0f;
+		}
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::P)) {
+			*newState = new PauseScreen();
+			return PushdownResult::Push;
+		}
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::F1)) {
+			std::cout << "Returning to main menu..." << std::endl;
+			return PushdownResult::Pop;
+		}
+		if (rand() % 7 == 0) {
+			coinsMined++;
+		}
+		return PushdownResult::NoChange;
+	};
+
+	void OnAwake() override {
+		std::cout << "Preparing to mine coins!" << std::endl;
+	}
+protected:
+	int coinsMined = 0;
+	float pauseReminder = 1.0f;
+};
+
+class IntroScreen : public PushdownState {
+	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::SPACE)) {
+			*newState = new GameScreen();
+			std::cout << "Starting game!" << std::endl;
+			return PushdownResult::Push;
+		}
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
+			std::cout << "Quitting game!" << std::endl;
+			return PushdownResult::Pop;
+		}
+		return PushdownResult::NoChange;
+	};
+	void OnAwake() override {
+		std::cout << "Welcome to a really awesome game!" << std::endl;
+		std::cout << "Press SPACE to start, or ESC to quit" << std::endl;
+	}
+};
+
+void TestPushdownAutomata(Window* w) {
+	PushdownMachine machine(new IntroScreen());
+	while (w->UpdateWindow()) {
+		float dt = w->GetTimer().GetTimeDeltaSeconds();
+		if (!machine.Update(dt)) {
+			return;
+		}
+	}
+}
+
 /*
 
 The main function should look pretty familar to you!
@@ -220,6 +291,8 @@ int main() {
 	initInfo.windowTitle = "CSC8503 Game technology!";
 
 	Window*w = Window::CreateGameWindow(initInfo);
+
+	TestPushdownAutomata(w);
 
 	if (!w->HasInitialised()) {
 		return -1;
