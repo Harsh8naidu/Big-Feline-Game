@@ -3,6 +3,7 @@
 #include "NetworkObject.h"
 #include "GameServer.h"
 #include "GameClient.h"
+#include "AckPacket.h"
 
 #define COLLISION_MSG 30
 
@@ -110,7 +111,14 @@ void NetworkedGame::BroadcastSnapshot(bool deltaFrame) {
 		//and store the lastID somewhere. A map between player
 		//and an int could work, or it could be part of a 
 		//NetworkPlayer struct. 
+
+		Player* player = o->GetPlayer();
 		int playerState = 0;
+
+		if (player) {
+			playerState = player->GetLastAcknowledgedID();
+		}
+
 		GamePacket* newPacket = nullptr;
 		if (o->WritePacket(&newPacket, deltaFrame, playerState)) {
 			thisServer->SendGlobalPacket(*newPacket);
@@ -152,8 +160,16 @@ void NetworkedGame::StartLevel() {
 }
 
 void NetworkedGame::ReceivePacket(int type, GamePacket* payload, int source) {
-	
+	if (type == Ack_State) {
+		AckPacket* ack = static_cast<AckPacket*>(payload); // Safer cast
+		auto it = players.find(source); // Explicit lookup
+		if (it != players.end()) {
+			Player* player = it->second;
+			player->AcknowledgePacket(ack->stateID); // Update acknowledgment in Player object
+		}
+	}
 }
+
 
 void NetworkedGame::OnPlayerCollision(NetworkPlayer* a, NetworkPlayer* b) {
 	if (thisServer) { //detected a collision between players!

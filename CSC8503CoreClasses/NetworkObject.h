@@ -5,6 +5,7 @@
 
 namespace NCL::CSC8503 {
 	class GameObject;
+	class Player;
 
 	struct FullPacket : public GamePacket {
 		int		objectID = -1;
@@ -39,7 +40,7 @@ namespace NCL::CSC8503 {
 
 	class NetworkObject		{
 	public:
-		NetworkObject(GameObject& o, int id);
+		NetworkObject(GameObject& o, int id, Player* player = nullptr);
 		virtual ~NetworkObject();
 
 		//Called by clients
@@ -48,6 +49,10 @@ namespace NCL::CSC8503 {
 		virtual bool WritePacket(GamePacket** p, bool deltaFrame, int stateID);
 
 		void UpdateStateHistory(int minID);
+
+		Player* GetPlayer() const {
+			return associatedPlayer;
+		}
 
 	protected:
 
@@ -71,5 +76,6 @@ namespace NCL::CSC8503 {
 		int fullErrors;
 
 		int networkID;
+		Player* associatedPlayer;
 	};
 }

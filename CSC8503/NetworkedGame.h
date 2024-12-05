@@ -1,12 +1,14 @@
 #pragma once
 #include "TutorialGame.h"
 #include "NetworkBase.h"
+#include "Player.h"
 
 namespace NCL {
 	namespace CSC8503 {
 		class GameServer;
 		class GameClient;
 		class NetworkPlayer;
+		class Player;
 
 		class NetworkedGame : public TutorialGame, public PacketReceiver {
 		public:
@@ -43,6 +45,8 @@ namespace NCL {
 
 			std::map<int, GameObject*> serverPlayers;
 			GameObject* localPlayer;
+
+			std::map<int, Player*> players;
 		};
 	}
 }
