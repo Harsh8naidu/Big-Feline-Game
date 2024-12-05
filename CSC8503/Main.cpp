@@ -292,7 +292,7 @@ int main() {
 
 	Window*w = Window::CreateGameWindow(initInfo);
 
-	TestPushdownAutomata(w);
+	//TestPushdownAutomata(w);
 
 	if (!w->HasInitialised()) {
 		return -1;
