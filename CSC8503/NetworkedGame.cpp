@@ -96,33 +96,35 @@ void NetworkedGame::UpdateAsClient(float dt) {
 }
 
 void NetworkedGame::BroadcastSnapshot(bool deltaFrame) {
-	std::vector<GameObject*>::const_iterator first;
-	std::vector<GameObject*>::const_iterator last;
+	for (auto& [player, peer] : playerPeerMap) {
+		std::vector<GameObject*>::const_iterator first;
+		std::vector<GameObject*>::const_iterator last;
 
-	world->GetObjectIterators(first, last);
+		world->GetObjectIterators(first, last);
 
-	for (auto i = first; i != last; ++i) {
-		NetworkObject* o = (*i)->GetNetworkObject();
-		if (!o) {
-			continue;
-		}
-		//TODO - you'll need some way of determining
-		//when a player has sent the server an acknowledgement
-		//and store the lastID somewhere. A map between player
-		//and an int could work, or it could be part of a 
-		//NetworkPlayer struct. 
+		for (auto i = first; i != last; ++i) {
+			NetworkObject* o = (*i)->GetNetworkObject();
+			if (!o) {
+				continue;
+			}
 
-		Player* player = o->GetPlayer();
-		int playerState = 0;
+			Player* player = o->GetPlayer();
+			int playerState = 0;
 
-		if (player) {
-			playerState = player->GetLastAcknowledgedID();
-		}
+			if (player) {
+				playerState = player->GetLastAcknowledgedID();
+			}
 
-		GamePacket* newPacket = nullptr;
-		if (o->WritePacket(&newPacket, deltaFrame, playerState)) {
-			thisServer->SendGlobalPacket(*newPacket);
-			delete newPacket;
+			GamePacket* newPacket = nullptr;
+			if (o->WritePacket(&newPacket, deltaFrame, playerState)) {
+				// Get the peerID from the NetworkPlayer
+				int peerID = player->GetPlayerNum();
+
+				std::cout << "Sending packet to player " << peerID << std::endl;
+				// Send the packet to the specific player via ENet
+				thisServer->SendPacket(*newPacket, peerID);
+				delete newPacket;
+			}
 		}
 	}
 }
@@ -182,4 +184,15 @@ void NetworkedGame::OnPlayerCollision(NetworkPlayer* a, NetworkPlayer* b) {
 		newPacket.playerID = b->GetPlayerNum();
 		thisClient->SendPacket(newPacket);
 	}
+}
+
+void NetworkedGame::OnPlayerConnected(int playerID) {
+	NetworkPlayer* newPlayer = new NetworkPlayer(this, playerID);
+
+	//world->AddGameObject(newPlayer); // Add the new player to the game world
+
+	// Add the new player to the player-peer map
+	playerPeerMap[playerID] = newPlayer;
+
+	std::cout << "Player " << playerID << " connected!" << std::endl;
 }

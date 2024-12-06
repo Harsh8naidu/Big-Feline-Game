@@ -17,7 +17,11 @@ namespace NCL {
 			bool SendGlobalPacket(int msgID);
 			bool SendGlobalPacket(GamePacket& packet);
 
+			bool SendPacket(GamePacket& packet, int peerId);
+
 			virtual void UpdateServer();
+
+			int GetPeerID(int peerID);
 
 		protected:
 			int			port;
@@ -27,6 +31,7 @@ namespace NCL {
 
 			int incomingDataRate;
 			int outgoingDataRate;
+			int peerID;
 		};
 	}
 }

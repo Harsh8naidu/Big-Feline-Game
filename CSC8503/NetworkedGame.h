@@ -28,6 +28,8 @@ namespace NCL {
 
 			void OnPlayerCollision(NetworkPlayer* a, NetworkPlayer* b);
 
+			void OnPlayerConnected(int playerID);
+
 		protected:
 			void UpdateAsServer(float dt);
 			void UpdateAsClient(float dt);
@@ -47,6 +49,7 @@ namespace NCL {
 			GameObject* localPlayer;
 
 			std::map<int, Player*> players;
+			std::map<int, NetworkPlayer*> playerPeerMap;
 		};
 	}
 }
