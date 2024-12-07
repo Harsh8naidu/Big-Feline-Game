@@ -7,8 +7,7 @@
 #include "PositionConstraint.h"
 #include "OrientationConstraint.h"
 #include "StateGameObject.h"
-
-
+#include "NetworkedGame.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -64,7 +63,7 @@ void TutorialGame::InitialiseAssets() {
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
 
 	InitCamera();
-	InitWorld();
+	//InitWorld(); //This is now done in the network tutorial to allow for server/client selection
 }
 
 TutorialGame::~TutorialGame()	{

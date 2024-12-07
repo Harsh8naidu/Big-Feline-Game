@@ -24,6 +24,8 @@ NetworkedGame::NetworkedGame()	{
 	NetworkBase::Initialise();
 	timeToNextPacket  = 0.0f;
 	packetsToSnapshot = 0;
+	std::cout << "NetworkedGame Created!" << std::endl;
+	StartLevel();
 }
 
 NetworkedGame::~NetworkedGame()	{
@@ -158,6 +160,13 @@ void NetworkedGame::SpawnPlayer() {
 }
 
 void NetworkedGame::StartLevel() {
+	std::cout << "Starting Level!" << std::endl;
+	world->ClearAndErase();
+	physics->Clear();
+
+	AddFloorToWorld(Vector3(0, 0, 0));
+
+	AddPlayerToWorld(Vector3(0, 2, 0));
 
 }
 

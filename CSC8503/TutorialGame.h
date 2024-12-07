@@ -11,6 +11,7 @@
 
 namespace NCL {
 	namespace CSC8503 {
+		
 		class TutorialGame		{
 		public:
 			TutorialGame();
