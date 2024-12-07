@@ -21,7 +21,6 @@ TutorialGame::TutorialGame() : controller(*Window::GetWindow()->GetKeyboard(), *
 #else 
 	renderer = new GameTechRenderer(*world);
 #endif
-
 	physics		= new PhysicsSystem(*world);
 
 	forceMagnitude	= 10.0f;

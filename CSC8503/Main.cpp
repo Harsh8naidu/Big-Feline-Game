@@ -325,6 +325,61 @@ void TestNetworking() {
 	NetworkBase::Destroy();
 }
 
+void RunServer() {
+	NetworkBase::Initialise();
+	TestPacketReceiver serverReceiver("Server");
+
+	int port = NetworkBase::GetDefaultPort();
+	GameServer server(port, 1);
+
+	server.RegisterPacketHandler(String_Message, &serverReceiver);
+
+	for (int i = 0; i < 100; ++i) {
+		StringPacket s = StringPacket("Server says hello! " + std::to_string(i));
+		server.SendGlobalPacket(s);
+		server.UpdateServer();
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
+
+	NetworkBase::Destroy();
+	std::cout << "Server shut down successfully." << std::endl;
+}
+
+void RunClient(Window* w) {
+	NetworkBase::Initialise();
+	TestPacketReceiver clientReceiver("Client");
+
+	int port = NetworkBase::GetDefaultPort();
+	GameClient client;
+
+	client.RegisterPacketHandler(String_Message, &clientReceiver);
+	if (!client.Connect(127, 0, 0, 1, port)) {
+		std::cout << "Client failed to connect!" << std::endl;
+		return;
+	}
+
+	NetworkedGame* game = new NetworkedGame();
+
+	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
+		float dt = w->GetTimer().GetTimeDeltaSeconds();
+		if (dt > 0.1f) {
+			std::cout << "Skipping large time delta" << std::endl;
+			continue;
+		}
+
+		game->UpdateGame(dt);
+		client.UpdateClient();
+
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
+			break;
+		}
+	}
+
+	delete game;
+	NetworkBase::Destroy();
+	std::cout << "Client shut down successfully." << std::endl;
+}
+
 /*
 
 The main function should look pretty familar to you!
@@ -337,7 +392,8 @@ This time, we've added some extra functionality to the window class - we can
 hide or show the 
 
 */
-int main() {
+
+int main(int argc, char** argv) {
 	WindowInitialisation initInfo;
 	initInfo.width		= 1280;
 	initInfo.height		= 720;
@@ -349,10 +405,22 @@ int main() {
 
 	if (!w->HasInitialised()) {
 		return -1;
-	}	
+	}
 
 	w->ShowOSPointer(false);
 	w->LockMouseToWindow(true);
+
+	// Determine mode based on command line arguments
+	bool isServer = argc > 1;
+
+	if (isServer) {
+		std::cout << "Running as server" << std::endl;
+		RunServer();
+	}
+	else {
+		std::cout << "Running as client" << std::endl;
+		RunClient(w);
+	}
 
 	NetworkedGame* g = new NetworkedGame();
 	w->GetTimer().GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!
