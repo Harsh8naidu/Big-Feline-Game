@@ -85,7 +85,14 @@ void TutorialGame::UpdateGame(float dt) {
 	if (!inSelectionMode) {
 		world->GetMainCamera().UpdateCamera(dt);
 	}
+
+	if (lockedObject == nullptr) {
+		std::cout << "player set to lockedObject" << std::endl;
+		lockedObject = player;
+	}
+
 	if (lockedObject != nullptr) {
+		std::cout << "camera snapped to player" << std::endl;
 		Vector3 objPos = lockedObject->GetTransform().GetPosition();
 		Vector3 camPos = objPos + lockedOffset;
 
@@ -384,6 +391,8 @@ GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 	character->GetPhysicsObject()->InitSphereInertia();
 
 	world->AddGameObject(character);
+
+	player = character;
 
 	return character;
 }
