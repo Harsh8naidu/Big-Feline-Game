@@ -36,6 +36,10 @@ vector<Vector3> testNodes;
 void TestPathfinding() {
 	NavigationGrid grid("TestGrid1.txt");
 
+	TutorialGame* game = new TutorialGame();
+	// Generate the maze
+	game->GenerateMaze(grid);
+
 	NavigationPath outPath;
 
 	Vector3 startPos(80, 0, 10);
@@ -53,7 +57,6 @@ void DisplayPathfinding() {
 	for (int i = 1; i < testNodes.size(); ++i) {
 		Vector3 a = testNodes[i - 1];
 		Vector3 b = testNodes[i];
-
 		Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
 	}
 }
@@ -325,6 +328,7 @@ void TestNetworking() {
 	NetworkBase::Destroy();
 }
 
+
 void RunServer() {
 	NetworkBase::Initialise();
 	TestPacketReceiver serverReceiver("Server");
@@ -360,6 +364,9 @@ void RunClient(Window* w) {
 
 	NetworkedGame* game = new NetworkedGame();
 
+	TestPathfinding();
+	
+
 	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
 		float dt = w->GetTimer().GetTimeDeltaSeconds();
 		if (dt > 0.1f) {
@@ -373,6 +380,8 @@ void RunClient(Window* w) {
 		if (Window::GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
 			break;
 		}
+
+		DisplayPathfinding();
 	}
 
 	delete game;
@@ -425,34 +434,36 @@ int main(int argc, char** argv) {
 	NetworkedGame* g = new NetworkedGame();
 	w->GetTimer().GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!
 
-	TestPathfinding();
+	//TestPathfinding();
 	//TestBehaviourTree();
 
-	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
-		float dt = w->GetTimer().GetTimeDeltaSeconds();
-		if (dt > 0.1f) {
-			std::cout << "Skipping large time delta" << std::endl;
-			continue; //must have hit a breakpoint or something to have a 1 second frame time!
-		}
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::PRIOR)) {
-			w->ShowConsole(true);
-		}
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::NEXT)) {
-			w->ShowConsole(false);
-		}
+	//while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
+	//	float dt = w->GetTimer().GetTimeDeltaSeconds();
+	//	if (dt > 0.1f) {
+	//		std::cout << "Skipping large time delta" << std::endl;
+	//		continue; //must have hit a breakpoint or something to have a 1 second frame time!
+	//	}
+	//	if (Window::GetKeyboard()->KeyPressed(KeyCodes::PRIOR)) {
+	//		w->ShowConsole(true);
+	//	}
+	//	if (Window::GetKeyboard()->KeyPressed(KeyCodes::NEXT)) {
+	//		w->ShowConsole(false);
+	//	}
 
-		if (Window::GetKeyboard()->KeyPressed(KeyCodes::T)) {
-			w->SetWindowPosition(0, 0);
-		}
+	//	if (Window::GetKeyboard()->KeyPressed(KeyCodes::T)) {
+	//		w->SetWindowPosition(0, 0);
+	//	}
 
-		//TestStateMachine();
-		DisplayPathfinding();
+	//	//TestStateMachine();
+	//	DisplayPathfinding();
 
-		//TestNetworking();
+	//	//TestNetworking();
 
-		w->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
+	//	w->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
 
-		g->UpdateGame(dt);
-	}
-	Window::DestroyGameWindow();
+	//	g->UpdateGame(dt);
+	//}
+	//Window::DestroyGameWindow();
 }
+
+

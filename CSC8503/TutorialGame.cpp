@@ -8,6 +8,7 @@
 #include "OrientationConstraint.h"
 #include "StateGameObject.h"
 #include "NetworkedGame.h"
+#include <NavigationGrid.h>
 
 using namespace NCL;
 using namespace CSC8503;
@@ -86,13 +87,17 @@ void TutorialGame::UpdateGame(float dt) {
 		world->GetMainCamera().UpdateCamera(dt);
 	}
 
-	if (lockedObject == nullptr) {
-		std::cout << "player set to lockedObject" << std::endl;
-		lockedObject = player;
+	if (lockedObject == nullptr && isCameraLocked) {
+		lockedObject = player; // lock the camera to the player
+	}
+	
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::C)) {
+		std::cout << "Camera unlocked" << std::endl;
+		lockedObject = nullptr; // release the camera from the player
+		isCameraLocked = false;
 	}
 
 	if (lockedObject != nullptr) {
-		std::cout << "camera snapped to player" << std::endl;
 		Vector3 objPos = lockedObject->GetTransform().GetPosition();
 		Vector3 camPos = objPos + lockedOffset;
 
@@ -286,6 +291,8 @@ void TutorialGame::InitWorld() {
 	testStateObject = AddStateObjectToWorld(Vector3(0, 10, -10));
 }
 
+
+
 /*
 
 A single function to add a large immoveable cube to the bottom of our world
@@ -369,6 +376,30 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	world->AddGameObject(cube);
 
 	return cube;
+}
+
+void TutorialGame::GenerateMaze(NavigationGrid& grid) {
+	// loop through the grid and find all wall tiles ('x')
+	for (int y = 0; y < grid.GetGridHeight(); ++y) {
+		for (int x = 0; x < grid.GetGridWidth(); ++x) {
+			// access each grid node
+			GridNode& node = grid.GetGridCount()[y * grid.GetGridWidth() + x];
+			
+			// check if the node is a wall ('x')
+			if (node.type == 'x') {
+				// create a position vector for where the wall is
+				Vector3 position = node.position;
+
+				Vector3 cubeSize = Vector3(8, 8, 8);
+
+				// add a cube to the world at the wall position
+				GameObject* newCube = AddCubeToWorld(position, cubeSize);
+
+				std::cout << "New cube: " << newCube->GetTransform().GetPosition().x << " , " << newCube->GetTransform().GetPosition().y << " , " << newCube->GetTransform().GetPosition().z << " , " << std::endl;
+				Debug::DrawLine(position, position + Vector3(0, 5, 0), Vector4(1, 0, 0, 1), 120);
+			}
+		}
+	}
 }
 
 GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
