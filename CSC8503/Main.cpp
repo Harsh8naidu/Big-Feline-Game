@@ -336,6 +336,7 @@ void RunClient(Window* w) {
 
 	game->TestPathfinding();
 	
+	TestBehaviourTree();
 
 	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
 		float dt = w->GetTimer().GetTimeDeltaSeconds();

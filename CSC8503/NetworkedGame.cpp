@@ -26,7 +26,7 @@ NetworkedGame::NetworkedGame()	{
 	packetsToSnapshot = 0;
 	std::cout << "NetworkedGame Created!" << std::endl;
 	StartLevel();
-	AddPlayerToWorld(Vector3(0, 2, 0));
+	SpawnPlayer();
 }
 
 NetworkedGame::~NetworkedGame()	{
@@ -156,8 +156,6 @@ void NetworkedGame::UpdateMinimumState() {
 	}
 }
 
-
-
 void NetworkedGame::TestPathfinding() {
 	NavigationGrid grid("TestGrid1.txt");
 
@@ -193,12 +191,12 @@ void NetworkedGame::AddMazeToWorld() {
 	const auto& wallPositions = game->GetWallPositions();
 
 	for (const Vector3& pos : wallPositions) {
-		AddCubeToWorld(pos, cubeSize);
+		AddCubeToWorld(pos, cubeSize, 0);
 	}
 }
 
 void NetworkedGame::SpawnPlayer() {
-	AddPlayerToWorld(Vector3(0, 2, 0));
+	AddPlayerToWorld(Vector3(0, 2, -30));
 }
 
 void NetworkedGame::StartLevel() {
@@ -206,6 +204,8 @@ void NetworkedGame::StartLevel() {
 	physics->Clear();
 
 	AddFloorToWorld(Vector3(0, -2, 0));
+
+	AddEnemyToWorld(Vector3(30, 2, -30));
 }
 
 void NetworkedGame::ReceivePacket(int type, GamePacket* payload, int source) {

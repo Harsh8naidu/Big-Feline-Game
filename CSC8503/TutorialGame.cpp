@@ -94,8 +94,9 @@ void TutorialGame::UpdateGame(float dt) {
 	if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::C)) {
 		std::cout << "Camera unlocked" << std::endl;
 		lockedObject = nullptr; // release the camera from the player
-		isCameraLocked = false;
+		isCameraLocked = !isCameraLocked;
 	}
+	
 
 	if (lockedObject != nullptr) {
 		Vector3 objPos = lockedObject->GetTransform().GetPosition();
@@ -396,14 +397,14 @@ void TutorialGame::GenerateMaze(NavigationGrid& grid) {
 
 				//AddCubeToWorld(position, cubeSize);
 
-				Debug::DrawLine(position, position + Vector3(0, 5, 0), Vector4(1, 0, 0, 1), 120);
+				//Debug::DrawLine(position, position + Vector3(0, 5, 0), Vector4(1, 0, 0, 1), 120);
 			}
 		}
 	}
 }
 
 GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
-	float meshSize		= 1.0f;
+	float meshSize		= 3.0f;
 	float inverseMass	= 0.5f;
 
 	GameObject* character = new GameObject();
@@ -646,31 +647,63 @@ void TutorialGame::MoveSelectedObject() {
 	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 100.0f;
 
 	if (!selectionObject) {
-		return;//we haven't selected anything!
+		return; // We haven't selected anything!
 	}
 
+	// Timer and speed setup
 	float dt = Window::GetWindow()->GetTimer().GetTimeDeltaSeconds();
+	float speed = 10.0f;
+	Vector3 moveDirection = Vector3(0, 0, 0); // Accumulates movement forces
 
+	// Grounded check using raycast
+	Ray groundRay(selectionObject->GetTransform().GetPosition(), Vector3(0, -1, 0));
+	RayCollision groundCollision;
+	bool isGrounded = world->Raycast(groundRay, groundCollision, true) && groundCollision.rayDistance < 0.1f;
+
+	// Keyboard input handling
 	if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::W)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 10));
+		moveDirection += Vector3(0, 0, speed);
+		selectionObject->GetTransform().SetOrientation(Quaternion::AxisAngleToQuaterion(Vector3(0, 1, 0), 0));
 	}
-	else if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::S)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -10));
+	if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::S)) {
+		moveDirection += Vector3(0, 0, -speed);
+		selectionObject->GetTransform().SetOrientation(Quaternion::AxisAngleToQuaterion(Vector3(0, 1, 0), 180));
 	}
-	else if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::A)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(-10, 0, 0));
+	if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::A)) {
+		moveDirection += Vector3(speed, 0, 0);
+		selectionObject->GetTransform().SetOrientation(Quaternion::AxisAngleToQuaterion(Vector3(0, 1, 0), 90));
 	}
-	else if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::D)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(10, 0, 0));
+	if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::D)) {
+		moveDirection += Vector3(-speed, 0, 0);
+		selectionObject->GetTransform().SetOrientation(Quaternion::AxisAngleToQuaterion(Vector3(0, 1, 0), -90));
 	}
-	else if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::NUM8)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 10, 0));
-	}
-	else if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::NUM2)) {
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -10, 0));
+	if (Window::GetKeyboard()->KeyHeld(NCL::KeyCodes::NUM2)) {
+		moveDirection += Vector3(0, -speed, 0);
 	}
 
-	//Push the selected object!
+	// Jump logic
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::SPACE) && isGrounded) {
+		selectionObject->GetPhysicsObject()->ApplyLinearImpulse(Vector3(0, 20.0f, 0));
+	}
+
+	// Apply accumulated forces for movement
+	if (moveDirection.x != 0.0f || moveDirection.z != 0.0f) {
+		selectionObject->GetPhysicsObject()->AddForce(moveDirection);
+	}
+	else {
+		// Stop the object if no movement keys are pressed
+		selectionObject->GetPhysicsObject()->ClearForces();
+		selectionObject->GetPhysicsObject()->SetLinearVelocity(Vector3(0, selectionObject->GetPhysicsObject()->GetLinearVelocity().y, 0));
+		selectionObject->GetPhysicsObject()->SetAngularVelocity(Vector3(0, 0, 0));
+	}
+
+	// Gravity handling:
+	if (!isGrounded) {
+		// Ensure gravity is applied when the object is in the air
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -9.8f, 0));  // Assuming standard gravity
+	}
+
+	// Push the selected object using the mouse
 	if (Window::GetMouse()->ButtonPressed(NCL::MouseButtons::Right)) {
 		Ray ray = CollisionDetection::BuildRayFromMouse(world->GetMainCamera());
 
@@ -682,5 +715,3 @@ void TutorialGame::MoveSelectedObject() {
 		}
 	}
 }
-
-
