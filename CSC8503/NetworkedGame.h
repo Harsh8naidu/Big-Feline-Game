@@ -32,6 +32,8 @@ namespace NCL {
 
 			void OnPlayerConnected(int playerID);
 
+			void TestBehaviourTree();
+
 			void AddMazeToWorld();
 
 			void TestPathfinding();

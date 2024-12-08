@@ -5,6 +5,11 @@
 #include "GameClient.h"
 #include "AckPacket.h"
 
+#include "BehaviourNode.h"
+#include "BehaviourSelector.h"
+#include "BehaviourSequence.h"
+#include "BehaviourAction.h"
+
 #define COLLISION_MSG 30
 
 struct MessagePacket : public GamePacket {
@@ -27,6 +32,8 @@ NetworkedGame::NetworkedGame()	{
 	std::cout << "NetworkedGame Created!" << std::endl;
 	StartLevel();
 	SpawnPlayer();
+	TestPathfinding();
+	//TestBehaviourTree();
 }
 
 NetworkedGame::~NetworkedGame()	{
@@ -72,6 +79,8 @@ void NetworkedGame::UpdateGame(float dt) {
 	if (!thisClient && Window::GetKeyboard()->KeyPressed(KeyCodes::F10)) {
 		StartAsClient(127,0,0,1);
 	}
+
+	DisplayPathfinding();
 
 	TutorialGame::UpdateGame(dt);
 }
@@ -242,4 +251,113 @@ void NetworkedGame::OnPlayerConnected(int playerID) {
 	playerPeerMap[playerID] = newPlayer;
 
 	std::cout << "Player " << playerID << " connected!" << std::endl;
+}
+
+void NetworkedGame::TestBehaviourTree() {
+	float behaviourTimer;
+	float distanceToTarget;
+	BehaviourAction* findKey = new BehaviourAction("Find Key", [&](float dt, BehaviourState state)->BehaviourState {
+		if (state == Initialise) {
+			std::cout << "Looking for key..." << std::endl;
+			behaviourTimer = rand() % 100;
+			return Ongoing;
+		}
+		else if (state == Ongoing) {
+			behaviourTimer -= dt;
+			if (behaviourTimer <= 0.0f) {
+				std::cout << "Found a key!" << std::endl;
+				return Success;
+			}
+		}
+		return state; // will be ongoing until success
+		});
+
+	BehaviourAction* goToRoom = new BehaviourAction("Go To Room", [&](float dt, BehaviourState state)->BehaviourState {
+		if (state == Initialise) {
+			std::cout << "Going to the loot room..." << std::endl;
+			state = Ongoing;
+		}
+		else if (state == Ongoing) {
+			distanceToTarget -= dt;
+			if (distanceToTarget <= 0.0f) {
+				std::cout << "Reached room!" << std::endl;
+				return Success;
+			}
+		}
+		return state; // will be ongoing until success
+		});
+
+	BehaviourAction* openDoor = new BehaviourAction("Open Door", [&](float dt, BehaviourState state)->BehaviourState {
+		if (state == Initialise) {
+			std::cout << "Opening door..." << std::endl;
+			return Success;
+		}
+		return state; // will be ongoing until success
+		});
+
+	BehaviourAction* lookForTreasure = new BehaviourAction("Look For Treasure", [&](float dt, BehaviourState state)->BehaviourState {
+		if (state == Initialise) {
+			std::cout << "Looking for treasure..." << std::endl;
+			return Ongoing;
+		}
+		else if (state == Ongoing) {
+			bool found = rand() % 2;
+			if (found) {
+				std::cout << "I found some treasure!" << std::endl;
+				return Success;
+			}
+			std::cout << "No treasure here..." << std::endl;
+			return Failure;
+		}
+		return state; // will be ongoing until success
+		});
+
+	BehaviourAction* lookForItems = new BehaviourAction("Look For Items", [&](float dt, BehaviourState state)->BehaviourState {
+		if (state == Initialise) {
+			std::cout << "Looking for items..." << std::endl;
+			return Ongoing;
+		}
+		else if (state == Ongoing) {
+			bool found = rand() % 2;
+			if (found) {
+				std::cout << "I found some items!" << std::endl;
+				return Success;
+			}
+			std::cout << "No items here..." << std::endl;
+			return Failure;
+		}
+		return state; // will be ongoing until success
+		});
+
+	BehaviourSequence* sequence = new BehaviourSequence("Room Sequence");
+	sequence->AddChild(findKey);
+	sequence->AddChild(goToRoom);
+	sequence->AddChild(openDoor);
+
+	BehaviourSelector* selection = new BehaviourSelector("Loot Selection");
+	selection->AddChild(lookForTreasure);
+	selection->AddChild(lookForItems);
+
+	BehaviourSequence* rootSequence = new BehaviourSequence("Root Sequence");
+	rootSequence->AddChild(sequence);
+	rootSequence->AddChild(selection);
+
+	for (int i = 0; i < 5; ++i) {
+		rootSequence->Reset();
+		behaviourTimer = 0.0f;
+		distanceToTarget = rand() % 250;
+		BehaviourState state = Ongoing;
+		std::cout << "We're going on an adventure!" << std::endl;
+		while (state == Ongoing) {
+			state = rootSequence->Execute(1.0f); // fake dt
+		}
+		if (state == Success) {
+			std::cout << "What a successful adventure!" << std::endl;
+		}
+		else if (state == Failure) {
+			std::cout << "What a waste of time!" << std::endl;
+		}
+	}
+
+	std::cout << "All done!" << std::endl;
 }

@@ -65,114 +65,7 @@ void TestStateMachine() {
 	}
 }
 
-void TestBehaviourTree() {
-	float behaviourTimer;
-	float distanceToTarget;
-	BehaviourAction* findKey = new BehaviourAction("Find Key", [&](float dt, BehaviourState state)->BehaviourState {
-		if (state == Initialise) {
-			std::cout << "Looking for key..." << std::endl;
-			behaviourTimer = rand() % 100;
-			return Ongoing;
-		}
-		else if (state == Ongoing) {
-			behaviourTimer -= dt;
-			if (behaviourTimer <= 0.0f) {
-				std::cout << "Found a key!" << std::endl;
-				return Success;
-			}
-		}
-		return state; // will be ongoing until success
-		});
 
-	BehaviourAction* goToRoom = new BehaviourAction("Go To Room", [&](float dt, BehaviourState state)->BehaviourState {
-		if (state == Initialise) {
-			std::cout << "Going to the loot room..." << std::endl;
-			state = Ongoing;
-		}
-		else if (state == Ongoing) {
-			distanceToTarget -= dt;
-			if (distanceToTarget <= 0.0f) {
-				std::cout << "Reached room!" << std::endl;
-				return Success;
-			}
-		}
-		return state; // will be ongoing until success
-		});
-
-	BehaviourAction* openDoor = new BehaviourAction("Open Door", [&](float dt, BehaviourState state)->BehaviourState {
-		if (state == Initialise) {
-			std::cout << "Opening door..." << std::endl;
-			return Success;
-		}
-		return state; // will be ongoing until success
-		});
-
-	BehaviourAction* lookForTreasure = new BehaviourAction("Look For Treasure", [&](float dt, BehaviourState state)->BehaviourState {
-		if (state == Initialise) {
-			std::cout << "Looking for treasure..." << std::endl;
-			return Ongoing;
-		}
-		else if (state == Ongoing) {
-			bool found = rand() % 2;
-			if (found) {
-				std::cout << "I found some treasure!" << std::endl;
-				return Success;
-			}
-			std::cout << "No treasure here..." << std::endl;
-			return Failure;
-		}
-		return state; // will be ongoing until success
-		});
-
-	BehaviourAction* lookForItems = new BehaviourAction("Look For Items", [&](float dt, BehaviourState state)->BehaviourState {
-		if (state == Initialise) {
-			std::cout << "Looking for items..." << std::endl;
-			return Ongoing;
-		}
-		else if (state == Ongoing) {
-			bool found = rand() % 2;
-			if (found) {
-				std::cout << "I found some items!" << std::endl;
-				return Success;
-			}
-			std::cout << "No items here..." << std::endl;
-			return Failure;
-		}
-		return state; // will be ongoing until success
-		});
-
-	BehaviourSequence* sequence = new BehaviourSequence("Room Sequence");
-	sequence->AddChild(findKey);
-	sequence->AddChild(goToRoom);
-	sequence->AddChild(openDoor);
-
-	BehaviourSelector* selection = new BehaviourSelector("Loot Selection");
-	selection->AddChild(lookForTreasure);
-	selection->AddChild(lookForItems);
-
-	BehaviourSequence* rootSequence = new BehaviourSequence("Root Sequence");
-	rootSequence->AddChild(sequence);
-	rootSequence->AddChild(selection);
-
-	for (int i = 0; i < 5; ++i) {
-		rootSequence->Reset();
-		behaviourTimer = 0.0f;
-		distanceToTarget = rand() % 250;
-		BehaviourState state = Ongoing;
-		std::cout << "We're going on an adventure!" << std::endl;
-		while (state == Ongoing) {
-			state = rootSequence->Execute(1.0f); // fake dt
-		}
-		if (state == Success) {
-			std::cout << "What a successful adventure!" << std::endl;
-		} 
-		else if (state == Failure) {
-			std::cout << "What a waste of time!" << std::endl;
-		}
-	}
-
-	std::cout << "All done!" << std::endl;
-}
 
 class PauseScreen : public PushdownState {
 	PushdownResult OnUpdate(float dt, PushdownState** newState) override {
@@ -264,39 +157,39 @@ protected:
 	std::string name;
 };
 
-void TestNetworking() {
-	NetworkBase::Initialise();
-
-	TestPacketReceiver serverReceiver("Server");
-	TestPacketReceiver clientReceiver("Client");
-
-	int port = NetworkBase::GetDefaultPort();
-
-	GameServer* server = new GameServer(port, 1);
-	GameClient* client = new GameClient();
-
-	server->RegisterPacketHandler(String_Message, &serverReceiver);
-	client->RegisterPacketHandler(String_Message, &clientReceiver);
-
-	bool canConnect = client->Connect(127, 0, 0, 1, port);
-
-	for (int i = 0; i < 100; ++i) {
-		StringPacket s = StringPacket("Server says hello! " + std::to_string(i));
-
-		server->SendGlobalPacket(s);
-
-		StringPacket c = StringPacket("Client says hello! " + std::to_string(i));
-
-		client->SendPacket(c);
-
-		server->UpdateServer();
-		client->UpdateClient();
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	}
-
-	NetworkBase::Destroy();
-}
+//void TestNetworking() {
+//	NetworkBase::Initialise();
+//
+//	TestPacketReceiver serverReceiver("Server");
+//	TestPacketReceiver clientReceiver("Client");
+//
+//	int port = NetworkBase::GetDefaultPort();
+//
+//	GameServer* server = new GameServer(port, 1);
+//	GameClient* client = new GameClient();
+//
+//	server->RegisterPacketHandler(String_Message, &serverReceiver);
+//	client->RegisterPacketHandler(String_Message, &clientReceiver);
+//
+//	bool canConnect = client->Connect(127, 0, 0, 1, port);
+//
+//	for (int i = 0; i < 100; ++i) {
+//		StringPacket s = StringPacket("Server says hello! " + std::to_string(i));
+//
+//		server->SendGlobalPacket(s);
+//
+//		StringPacket c = StringPacket("Client says hello! " + std::to_string(i));
+//
+//		client->SendPacket(c);
+//
+//		server->UpdateServer();
+//		client->UpdateClient();
+//
+//		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+//	}
+//
+//	NetworkBase::Destroy();
+//}
 
 
 void RunServer() {
@@ -308,16 +201,29 @@ void RunServer() {
 
 	server.RegisterPacketHandler(String_Message, &serverReceiver);
 
-	for (int i = 0; i < 100; ++i) {
-		StringPacket s = StringPacket("Server says hello! " + std::to_string(i));
+	std::cout << "Server started. Listening for connections..." << std::endl;
+
+	// Infinite loop to keep the server running
+	while (true) {
+		// Example packet to broadcast to clients
+		StringPacket s = StringPacket("Server says hello!");
 		server.SendGlobalPacket(s);
+
+		// Update server state
 		server.UpdateServer();
+
+		std::cout << "Server while loop running..." << std::endl;
+
+		// Sleep to avoid busy-waiting
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
 	}
 
+	// Cleanup when exiting
 	NetworkBase::Destroy();
 	std::cout << "Server shut down successfully." << std::endl;
 }
+
 
 void RunClient(Window* w) {
 	NetworkBase::Initialise();
@@ -334,10 +240,6 @@ void RunClient(Window* w) {
 
 	NetworkedGame* game = new NetworkedGame();
 
-	game->TestPathfinding();
-	
-	TestBehaviourTree();
-
 	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
 		float dt = w->GetTimer().GetTimeDeltaSeconds();
 		if (dt > 0.1f) {
@@ -351,8 +253,6 @@ void RunClient(Window* w) {
 		if (Window::GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
 			break;
 		}
-
-		game->DisplayPathfinding();
 	}
 
 	delete game;
