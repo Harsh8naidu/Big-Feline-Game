@@ -9,6 +9,7 @@
 
 #include "StateGameObject.h"
 #include "NavigationGrid.h"
+#include <vector>
 
 namespace NCL {
 	namespace CSC8503 {
@@ -21,6 +22,10 @@ namespace NCL {
 			virtual void UpdateGame(float dt);
 
 			void GenerateMaze(NavigationGrid& grid);
+
+			const std::vector<Vector3>& GetWallPositions() const {
+				return wallPositions;
+			}
 
 		protected:
 			void InitialiseAssets();
@@ -104,6 +109,8 @@ namespace NCL {
 
 			GameObject* player = nullptr;
 			bool isCameraLocked = false; // Toggle camera lock
+
+			std::vector<Vector3> wallPositions;
 		};
 	}
 }

@@ -390,12 +390,12 @@ void TutorialGame::GenerateMaze(NavigationGrid& grid) {
 				// create a position vector for where the wall is
 				Vector3 position = node.position;
 
+				wallPositions.push_back(position);
+
 				Vector3 cubeSize = Vector3(8, 8, 8);
 
-				// add a cube to the world at the wall position
-				GameObject* newCube = AddCubeToWorld(position, cubeSize);
+				//AddCubeToWorld(position, cubeSize);
 
-				std::cout << "New cube: " << newCube->GetTransform().GetPosition().x << " , " << newCube->GetTransform().GetPosition().y << " , " << newCube->GetTransform().GetPosition().z << " , " << std::endl;
 				Debug::DrawLine(position, position + Vector3(0, 5, 0), Vector4(1, 0, 0, 1), 120);
 			}
 		}

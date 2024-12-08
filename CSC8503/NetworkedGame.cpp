@@ -156,6 +156,47 @@ void NetworkedGame::UpdateMinimumState() {
 	}
 }
 
+
+
+void NetworkedGame::TestPathfinding() {
+	NavigationGrid grid("TestGrid1.txt");
+
+	// Generate the maze
+	game->GenerateMaze(grid);
+
+	// Add the maze to the game world
+	AddMazeToWorld();
+
+	NavigationPath outPath;
+
+	Vector3 startPos(80, 0, 10);
+	Vector3 endPos(80, 0, 80);
+
+	bool found = grid.FindPath(startPos, endPos, outPath);
+
+	Vector3 pos;
+	while (outPath.PopWaypoint(pos)) {
+		testNodes.push_back(pos);
+	}
+}
+
+void NetworkedGame::DisplayPathfinding() {
+	for (int i = 1; i < testNodes.size(); ++i) {
+		Vector3 a = testNodes[i - 1];
+		Vector3 b = testNodes[i];
+		Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
+	}
+}
+
+void NetworkedGame::AddMazeToWorld() {
+	Vector3 cubeSize = Vector3(5, 5, 5);
+	const auto& wallPositions = game->GetWallPositions();
+
+	for (const Vector3& pos : wallPositions) {
+		AddCubeToWorld(pos, cubeSize);
+	}
+}
+
 void NetworkedGame::SpawnPlayer() {
 	AddPlayerToWorld(Vector3(0, 2, 0));
 }
@@ -164,7 +205,7 @@ void NetworkedGame::StartLevel() {
 	world->ClearAndErase();
 	physics->Clear();
 
-	AddFloorToWorld(Vector3(0, 0, 0));
+	AddFloorToWorld(Vector3(0, -2, 0));
 }
 
 void NetworkedGame::ReceivePacket(int type, GamePacket* payload, int source) {

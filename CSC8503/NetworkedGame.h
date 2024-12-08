@@ -3,6 +3,8 @@
 #include "NetworkBase.h"
 #include "Player.h"
 
+#include <vector>
+
 namespace NCL {
 	namespace CSC8503 {
 		class GameServer;
@@ -30,12 +32,18 @@ namespace NCL {
 
 			void OnPlayerConnected(int playerID);
 
+			void AddMazeToWorld();
+
+			void TestPathfinding();
+			void DisplayPathfinding();
+
 		protected:
 			void UpdateAsServer(float dt);
 			void UpdateAsClient(float dt);
 
 			void BroadcastSnapshot(bool deltaFrame);
 			void UpdateMinimumState();
+
 			std::map<int, int> stateIDs;
 
 			GameServer* thisServer;
@@ -50,7 +58,11 @@ namespace NCL {
 
 			std::map<int, Player*> players;
 			std::map<int, NetworkPlayer*> playerPeerMap;
+
+			vector<Vector3> testNodes;
+
+			NavigationGrid* gridForMaze;
+			TutorialGame* game = new TutorialGame();
 		};
 	}
 }
-

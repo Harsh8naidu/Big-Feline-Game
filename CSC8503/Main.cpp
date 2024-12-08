@@ -31,36 +31,6 @@ using namespace CSC8503;
 #include <thread>
 #include <sstream>
 
-vector<Vector3> testNodes;
-
-void TestPathfinding() {
-	NavigationGrid grid("TestGrid1.txt");
-
-	TutorialGame* game = new TutorialGame();
-	// Generate the maze
-	game->GenerateMaze(grid);
-
-	NavigationPath outPath;
-
-	Vector3 startPos(80, 0, 10);
-	Vector3 endPos(80, 0, 80);
-
-	bool found = grid.FindPath(startPos, endPos, outPath);
-
-	Vector3 pos;
-	while (outPath.PopWaypoint(pos)) {
-		testNodes.push_back(pos);
-	}
-}
-
-void DisplayPathfinding() {
-	for (int i = 1; i < testNodes.size(); ++i) {
-		Vector3 a = testNodes[i - 1];
-		Vector3 b = testNodes[i];
-		Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
-	}
-}
-
 void TestStateMachine() {
 	StateMachine* testMachine = new StateMachine();
 	int data = 0;
@@ -364,7 +334,7 @@ void RunClient(Window* w) {
 
 	NetworkedGame* game = new NetworkedGame();
 
-	TestPathfinding();
+	game->TestPathfinding();
 	
 
 	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
@@ -381,7 +351,7 @@ void RunClient(Window* w) {
 			break;
 		}
 
-		DisplayPathfinding();
+		game->DisplayPathfinding();
 	}
 
 	delete game;
