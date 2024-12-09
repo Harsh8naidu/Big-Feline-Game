@@ -110,7 +110,11 @@ namespace NCL {
 
 			GameObject* objClosest = nullptr;
 
-			GameObject* player = nullptr;
+			GameObject* player = nullptr; // Player object cat
+
+			GameObject* player2 = nullptr;
+
+			GameObject* bonus1 = nullptr;
 			bool isCameraLocked = false; // Toggle camera lock
 			bool isRotatingAroundObject = false;
 			float rotationAngle = 0.0f; // Angle in radians

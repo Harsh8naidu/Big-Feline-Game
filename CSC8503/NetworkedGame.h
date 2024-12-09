@@ -12,6 +12,7 @@ namespace NCL {
 		class GameClient;
 		class NetworkPlayer;
 		class Player;
+		class NetworkObject;
 
 		class NetworkedGame : public TutorialGame {
 		public:
@@ -23,7 +24,7 @@ namespace NCL {
 
 			void UpdateGame(float dt) override;
 
-			void SpawnPlayer();
+			GameObject* SpawnPlayer();
 
 			void StartLevel();
 
@@ -70,6 +71,8 @@ namespace NCL {
 
 			GameClient* client = nullptr;
 			GameServer* server = nullptr;
+
+			NetworkObject* networkObject = nullptr;
 		};
 	}
 }

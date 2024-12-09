@@ -44,14 +44,21 @@ NetworkedGame::NetworkedGame(bool isServer)	{
 		server = new GameServer(port, 1);
 		//this->StartAsServer();
 		server->RegisterPacketHandler(String_Message, &serverReceiver);
+		server->RegisterPacketHandler(Received_State, &serverReceiver);
 	}
 	else {
 		client = new GameClient();
 		//this->StartAsClient(127, 0, 0, 1);
 		
 		client->RegisterPacketHandler(String_Message, &clientReceiver);
+		client->RegisterPacketHandler(Delta_State, &clientReceiver);
+		client->RegisterPacketHandler(Full_State, &clientReceiver);
+		client->RegisterPacketHandler(Player_Connected, &clientReceiver);
+		client->RegisterPacketHandler(Player_Disconnected, &clientReceiver);
+
 		client->Connect(127, 0, 0, 1, port);
 	}
+
 	StartLevel();
 	
 }
@@ -225,8 +232,9 @@ void NetworkedGame::AddMazeToWorld() {
 	}
 }
 
-void NetworkedGame::SpawnPlayer() {
-	AddPlayerToWorld(Vector3(0, 2, -30));
+GameObject* NetworkedGame::SpawnPlayer() {
+
+	return AddPlayerToWorld(Vector3(0, 2, -30));
 }
 
 void NetworkedGame::StartLevel() {
@@ -245,11 +253,14 @@ void NetworkedGame::StartLevel() {
 
 	AddFlyingStairs();
 
-	AddBonusToWorld(Vector3(-30, 2, 0));
+	bonus1 = AddBonusToWorld(Vector3(-30, 2, 0));
 
 	AddMazeToWorld();
 
-	SpawnPlayer();
+	player = SpawnPlayer();
+
+	//networkObject = new NetworkObject(playerToControl, 1, player1);
+
 }
 
 //void NetworkedGame::ReceivePacket(int type, GamePacket* payload, int source) {
