@@ -225,7 +225,7 @@ void RunServer() {
 }
 
 
-void RunClient(Window* w) {
+void RunClient(Window* w, bool server) {
 	NetworkBase::Initialise();
 	TestPacketReceiver clientReceiver("Client");
 
@@ -239,6 +239,12 @@ void RunClient(Window* w) {
 	}
 
 	NetworkedGame* game = new NetworkedGame();
+	if (server) {
+		game->StartAsServer();
+	}
+	else {
+		game->StartAsClient(127, 0, 0, 1);
+	}
 
 	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
 		float dt = w->GetTimer().GetTimeDeltaSeconds();
@@ -291,16 +297,17 @@ int main(int argc, char** argv) {
 	w->LockMouseToWindow(true);
 
 	// Determine mode based on command line arguments
-	bool isServer = argc > 1;
+	bool isServer = argc == 1;
 
 	if (isServer) {
 		std::cout << "Running as server" << std::endl;
-		RunServer();
+		//RunServer();
 	}
 	else {
 		std::cout << "Running as client" << std::endl;
-		RunClient(w);
+		//RunClient(w);
 	}
+	RunClient(w, isServer);
 
 	NetworkedGame* g = new NetworkedGame();
 	w->GetTimer().GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!

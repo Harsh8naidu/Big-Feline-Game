@@ -33,7 +33,6 @@ NetworkedGame::NetworkedGame()	{
 	StartLevel();
 	SpawnPlayer();
 	TestPathfinding();
-	//TestBehaviourTree();
 }
 
 NetworkedGame::~NetworkedGame()	{
@@ -215,6 +214,10 @@ void NetworkedGame::StartLevel() {
 	AddFloorToWorld(Vector3(0, -2, 0));
 
 	AddEnemyToWorld(Vector3(30, 2, -30));
+
+	AddFlyingStairs();
+
+	AddBonusToWorld(Vector3(-30, 2, 0));
 }
 
 void NetworkedGame::ReceivePacket(int type, GamePacket* payload, int source) {

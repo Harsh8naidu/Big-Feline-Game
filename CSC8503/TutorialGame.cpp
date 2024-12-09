@@ -100,19 +100,62 @@ void TutorialGame::UpdateGame(float dt) {
 
 	if (lockedObject != nullptr) {
 		Vector3 objPos = lockedObject->GetTransform().GetPosition();
-		Vector3 camPos = objPos + lockedOffset;
 
-		Matrix4 temp = Matrix::View(camPos, objPos, Vector3(0,1,0));
+		if (NCL::Window::GetMouse()->ButtonDown(NCL::MouseButtons::Middle)) {
+			isRotatingAroundObject = !isRotatingAroundObject;
+		}
+		if (isRotatingAroundObject) {
+			// Increment the rotation angle
+			rotationAngle += rotationSpeed * dt;
 
-		Matrix4 modelMat = Matrix::Inverse(temp);
+			// Calculate new camera position
+			float camX = objPos.x + distanceFromCat * cos(rotationAngle);
+			float camZ = objPos.z + distanceFromCat * sin(rotationAngle);
+			float camY = objPos.y + lockedOffset.y;
 
-		Quaternion q(modelMat);
-		Vector3 angles = q.ToEuler(); //nearly there now!
+			Vector3 camPos = Vector3(camX, camY, camZ);
 
-		world->GetMainCamera().SetPosition(camPos);
-		world->GetMainCamera().SetPitch(angles.x);
-		world->GetMainCamera().SetYaw(angles.y);
+			// Compute the direction vector from the camera to the object
+			// Calculate the direction vector from the camera to the object
+			Vector3 direction = objPos - camPos;
+
+			// Calculate the length (magnitude) of the direction vector
+			float length = sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
+
+			// Normalize the direction vector by dividing each component by the length
+			if (length > 0.0f) { // To prevent division by zero
+				direction.x /= length;
+				direction.y /= length;
+				direction.z /= length;
+			}
+
+
+			// Calculate yaw and pitch from the direction vector
+			float newYaw = atan2(direction.x, direction.z) * 180.0f / PI;  // Convert to degrees
+			float newPitch = asin(direction.y) * 180.0f / PI;              // Convert to degrees
+
+			// Update the camera position and orientation
+			world->GetMainCamera().SetPosition(camPos);
+			world->GetMainCamera().SetYaw(newYaw);
+			world->GetMainCamera().SetPitch(newPitch);
+		}
+		else {
+			// Default locked camera behavior
+			Vector3 camPos = objPos + lockedOffset;
+
+			Matrix4 temp = Matrix::View(camPos, objPos, Vector3(0, 1, 0));
+			Matrix4 modelMat = Matrix::Inverse(temp);
+
+			Quaternion q(modelMat);
+			Vector3 angles = q.ToEuler();
+
+			world->GetMainCamera().SetPosition(camPos);
+			world->GetMainCamera().SetPitch(angles.x);
+			world->GetMainCamera().SetYaw(angles.y);
+		}
 	}
+
+
 
 	UpdateKeys();
 
@@ -400,6 +443,15 @@ void TutorialGame::GenerateMaze(NavigationGrid& grid) {
 				//Debug::DrawLine(position, position + Vector3(0, 5, 0), Vector4(1, 0, 0, 1), 120);
 			}
 		}
+	}
+}
+
+void TutorialGame::AddFlyingStairs() {
+	Vector3 cubeSize = Vector3(5, 5, 5);
+
+	for (int i = 0; i < 10; ++i) {
+		Vector3 position = Vector3(-50, 5 + (i * 10), i * 10);
+		AddCubeToWorld(position, cubeSize, 0);
 	}
 }
 

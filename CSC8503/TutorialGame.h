@@ -23,6 +23,8 @@ namespace NCL {
 
 			void GenerateMaze(NavigationGrid& grid);
 
+			void AddFlyingStairs();
+
 			const std::vector<Vector3>& GetWallPositions() const {
 				return wallPositions;
 			}
@@ -109,6 +111,11 @@ namespace NCL {
 
 			GameObject* player = nullptr;
 			bool isCameraLocked = false; // Toggle camera lock
+			bool isRotatingAroundObject = false;
+			float rotationAngle = 0.0f; // Angle in radians
+			float rotationSpeed = 1.0f; // Rotation speed
+			float distanceFromCat = 10.0f; // Distance from the cat
+
 
 			std::vector<Vector3> wallPositions;
 		};
