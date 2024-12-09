@@ -581,6 +581,30 @@ StateGameObject* TutorialGame::AddStateObjectToWorld(const Vector3& position)
 	return apple;
 }
 
+StateGameObject* TutorialGame::AddAngryGooseToWorld(const Vector3& position) {
+	float meshSize = 3.0f;
+	float inverseMass = 0.5f;
+
+	StateGameObject* character = new StateGameObject();
+
+	AABBVolume* volume = new AABBVolume(Vector3(0.3f, 0.9f, 0.3f) * meshSize);
+	character->SetBoundingVolume((CollisionVolume*)volume);
+
+	character->GetTransform()
+		.SetScale(Vector3(meshSize, meshSize, meshSize))
+		.SetPosition(position);
+
+	character->SetRenderObject(new RenderObject(&character->GetTransform(), enemyMesh, nullptr, basicShader));
+	character->SetPhysicsObject(new PhysicsObject(&character->GetTransform(), character->GetBoundingVolume()));
+
+	character->GetPhysicsObject()->SetInverseMass(inverseMass);
+	character->GetPhysicsObject()->InitSphereInertia();
+
+	world->AddGameObject(character);
+
+	return character;
+}
+
 void TutorialGame::InitDefaultFloor() {
 	AddFloorToWorld(Vector3(0, -20, 0));
 }

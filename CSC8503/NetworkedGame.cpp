@@ -9,6 +9,7 @@
 #include "BehaviourSelector.h"
 #include "BehaviourSequence.h"
 #include "BehaviourAction.h"
+#include "TestPacketReceiver.h"
 
 #define COLLISION_MSG 30
 
@@ -22,7 +23,7 @@ struct MessagePacket : public GamePacket {
 	}
 };
 
-NetworkedGame::NetworkedGame()	{
+NetworkedGame::NetworkedGame(bool isServer)	{
 	thisServer = nullptr;
 	thisClient = nullptr;
 
@@ -31,8 +32,28 @@ NetworkedGame::NetworkedGame()	{
 	packetsToSnapshot = 0;
 	std::cout << "NetworkedGame Created!" << std::endl;
 	StartLevel();
-	SpawnPlayer();
 	TestPathfinding();
+
+	TestPacketReceiver clientReceiver("Client");
+	TestPacketReceiver serverReceiver("Server");
+
+	int port = NetworkBase::GetDefaultPort();
+
+
+	if (isServer) {
+		server = new GameServer(port, 1);
+		//this->StartAsServer();
+		server->RegisterPacketHandler(String_Message, &serverReceiver);
+	}
+	else {
+		client = new GameClient();
+		//this->StartAsClient(127, 0, 0, 1);
+		
+		client->RegisterPacketHandler(String_Message, &clientReceiver);
+		client->Connect(127, 0, 0, 1, port);
+	}
+	StartLevel();
+	
 }
 
 NetworkedGame::~NetworkedGame()	{
@@ -40,25 +61,25 @@ NetworkedGame::~NetworkedGame()	{
 	delete thisClient;
 }
 
-void NetworkedGame::StartAsServer() {
-	thisServer = new GameServer(NetworkBase::GetDefaultPort(), 4);
-
-	thisServer->RegisterPacketHandler(Received_State, this);
-
-	StartLevel();
-}
-
-void NetworkedGame::StartAsClient(char a, char b, char c, char d) {
-	thisClient = new GameClient();
-	thisClient->Connect(a, b, c, d, NetworkBase::GetDefaultPort());
-
-	thisClient->RegisterPacketHandler(Delta_State, this);
-	thisClient->RegisterPacketHandler(Full_State, this);
-	thisClient->RegisterPacketHandler(Player_Connected, this);
-	thisClient->RegisterPacketHandler(Player_Disconnected, this);
-
-	StartLevel();
-}
+//void NetworkedGame::StartAsServer() {
+//	thisServer = new GameServer(NetworkBase::GetDefaultPort(), 4);
+//
+//	thisServer->RegisterPacketHandler(Received_State, this);
+//
+//	StartLevel();
+//}
+//
+//void NetworkedGame::StartAsClient(char a, char b, char c, char d) {
+//	thisClient = new GameClient();
+//	thisClient->Connect(a, b, c, d, NetworkBase::GetDefaultPort());
+//
+//	thisClient->RegisterPacketHandler(Delta_State, this);
+//	thisClient->RegisterPacketHandler(Full_State, this);
+//	thisClient->RegisterPacketHandler(Player_Connected, this);
+//	thisClient->RegisterPacketHandler(Player_Disconnected, this);
+//
+//	StartLevel();
+//}
 
 void NetworkedGame::UpdateGame(float dt) {
 	timeToNextPacket -= dt;
@@ -72,14 +93,14 @@ void NetworkedGame::UpdateGame(float dt) {
 		timeToNextPacket += 1.0f / 20.0f; //20hz server/client update
 	}
 
-	if (!thisServer && Window::GetKeyboard()->KeyPressed(KeyCodes::F9)) {
-		StartAsServer();
-	}
-	if (!thisClient && Window::GetKeyboard()->KeyPressed(KeyCodes::F10)) {
-		StartAsClient(127,0,0,1);
-	}
-
 	DisplayPathfinding();
+
+	if (client) {
+		client->UpdateClient();
+	}
+	if (server) {
+		server->UpdateServer();
+	}
 
 	TutorialGame::UpdateGame(dt);
 }
@@ -171,7 +192,7 @@ void NetworkedGame::TestPathfinding() {
 	game->GenerateMaze(grid);
 
 	// Add the maze to the game world
-	AddMazeToWorld();
+	
 
 	NavigationPath outPath;
 
@@ -195,6 +216,7 @@ void NetworkedGame::DisplayPathfinding() {
 }
 
 void NetworkedGame::AddMazeToWorld() {
+	std::cout << "Adding maze to world..." << std::endl;
 	Vector3 cubeSize = Vector3(5, 5, 5);
 	const auto& wallPositions = game->GetWallPositions();
 
@@ -213,23 +235,33 @@ void NetworkedGame::StartLevel() {
 
 	AddFloorToWorld(Vector3(0, -2, 0));
 
-	AddEnemyToWorld(Vector3(30, 2, -30));
+	//AddEnemyToWorld(Vector3(30, 2, -30));
+
+	//testStateObject = AddStateObjectToWorld(Vector3(0, 10, -10));
+
+	gooseEnemy = AddAngryGooseToWorld(Vector3(50, 2, -50));
+
+	angryGooseAI = new AngryGoose(gooseEnemy);
 
 	AddFlyingStairs();
 
 	AddBonusToWorld(Vector3(-30, 2, 0));
+
+	AddMazeToWorld();
+
+	SpawnPlayer();
 }
 
-void NetworkedGame::ReceivePacket(int type, GamePacket* payload, int source) {
-	if (type == Ack_State) {
-		AckPacket* ack = static_cast<AckPacket*>(payload); // Safer cast
-		auto it = players.find(source); // Explicit lookup
-		if (it != players.end()) {
-			Player* player = it->second;
-			player->AcknowledgePacket(ack->stateID); // Update acknowledgment in Player object
-		}
-	}
-}
+//void NetworkedGame::ReceivePacket(int type, GamePacket* payload, int source) {
+//	if (type == Ack_State) {
+//		AckPacket* ack = static_cast<AckPacket*>(payload); // Safer cast
+//		auto it = players.find(source); // Explicit lookup
+//		if (it != players.end()) {
+//			Player* player = it->second;
+//			player->AcknowledgePacket(ack->stateID); // Update acknowledgment in Player object
+//		}
+//	}
+//}
 
 
 void NetworkedGame::OnPlayerCollision(NetworkPlayer* a, NetworkPlayer* b) {

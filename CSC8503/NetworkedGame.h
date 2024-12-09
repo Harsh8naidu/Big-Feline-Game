@@ -4,6 +4,7 @@
 #include "Player.h"
 
 #include <vector>
+#include "AngryGooseAI.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -12,9 +13,9 @@ namespace NCL {
 		class NetworkPlayer;
 		class Player;
 
-		class NetworkedGame : public TutorialGame, public PacketReceiver {
+		class NetworkedGame : public TutorialGame {
 		public:
-			NetworkedGame();
+			NetworkedGame(bool isServer);
 			~NetworkedGame();
 
 			void StartAsServer();
@@ -25,8 +26,6 @@ namespace NCL {
 			void SpawnPlayer();
 
 			void StartLevel();
-
-			void ReceivePacket(int type, GamePacket* payload, int source) override;
 
 			void OnPlayerCollision(NetworkPlayer* a, NetworkPlayer* b);
 
@@ -65,6 +64,12 @@ namespace NCL {
 
 			NavigationGrid* gridForMaze;
 			TutorialGame* game = new TutorialGame();
+
+			AngryGoose* angryGooseAI;
+			StateGameObject* gooseEnemy;
+
+			GameClient* client = nullptr;
+			GameServer* server = nullptr;
 		};
 	}
 }

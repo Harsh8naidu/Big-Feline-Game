@@ -10,6 +10,7 @@
 #include "SphereVolume.h"
 #include "CapsuleVolume.h"
 #include "Ray.h"
+#include "Plane.h"
 
 using NCL::Camera;
 using namespace NCL::Maths;

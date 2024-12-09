@@ -1,4 +1,6 @@
 #pragma once
+#include <set>
+
 #include "GameWorld.h"
 
 namespace NCL {

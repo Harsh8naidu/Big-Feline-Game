@@ -24,6 +24,8 @@
 #include "BehaviourSequence.h"
 #include "BehaviourAction.h"
 
+#include "TestPacketReceiver.h"
+
 using namespace NCL;
 using namespace CSC8503;
 
@@ -138,24 +140,24 @@ void TestPushdownAutomata(Window* w) {
 	}
 }
 
-class TestPacketReceiver : public PacketReceiver {
-public:
-	TestPacketReceiver(std::string name) {
-		this->name = name;
-	}
-
-	void ReceivePacket(int type, GamePacket* payload, int source) {
-		if (type == String_Message) {
-			StringPacket* realPacket = (StringPacket*)payload;
-
-			std::string message = realPacket->GetStringFromData();
-
-			std::cout << name << " received message: " << message << std::endl;
-		}
-	}
-protected:
-	std::string name;
-};
+//class TestPacketReceiver : public PacketReceiver {
+//public:
+//	TestPacketReceiver(std::string name) {
+//		this->name = name;
+//	}
+//
+//	void ReceivePacket(int type, GamePacket* payload, int source) {
+//		if (type == String_Message) {
+//			StringPacket* realPacket = (StringPacket*)payload;
+//
+//			std::string message = realPacket->GetStringFromData();
+//
+//			std::cout << name << " received message: " << message << std::endl;
+//		}
+//	}
+//protected:
+//	std::string name;
+//};
 
 //void TestNetworking() {
 //	NetworkBase::Initialise();
@@ -192,59 +194,43 @@ protected:
 //}
 
 
-void RunServer() {
+//void RunServer() {
+//	NetworkBase::Initialise();
+//	TestPacketReceiver serverReceiver("Server");
+//
+//	int port = NetworkBase::GetDefaultPort();
+//	GameServer server(port, 1);
+//
+//	server.RegisterPacketHandler(String_Message, &serverReceiver);
+//
+//	std::cout << "Server started. Listening for connections..." << std::endl;
+//
+//	// Infinite loop to keep the server running
+//	while (true) {
+//		// Example packet to broadcast to clients
+//		StringPacket s = StringPacket("Server says hello!");
+//		server.SendGlobalPacket(s);
+//
+//		// Update server state
+//		server.UpdateServer();
+//
+//		std::cout << "Server while loop running..." << std::endl;
+//
+//		// Sleep to avoid busy-waiting
+//		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+//
+//	}
+//
+//	// Cleanup when exiting
+//	NetworkBase::Destroy();
+//	std::cout << "Server shut down successfully." << std::endl;
+//}
+
+
+void RunGame(Window* w, bool isServer) {
 	NetworkBase::Initialise();
-	TestPacketReceiver serverReceiver("Server");
 
-	int port = NetworkBase::GetDefaultPort();
-	GameServer server(port, 1);
-
-	server.RegisterPacketHandler(String_Message, &serverReceiver);
-
-	std::cout << "Server started. Listening for connections..." << std::endl;
-
-	// Infinite loop to keep the server running
-	while (true) {
-		// Example packet to broadcast to clients
-		StringPacket s = StringPacket("Server says hello!");
-		server.SendGlobalPacket(s);
-
-		// Update server state
-		server.UpdateServer();
-
-		std::cout << "Server while loop running..." << std::endl;
-
-		// Sleep to avoid busy-waiting
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-	}
-
-	// Cleanup when exiting
-	NetworkBase::Destroy();
-	std::cout << "Server shut down successfully." << std::endl;
-}
-
-
-void RunClient(Window* w, bool server) {
-	NetworkBase::Initialise();
-	TestPacketReceiver clientReceiver("Client");
-
-	int port = NetworkBase::GetDefaultPort();
-	GameClient client;
-
-	client.RegisterPacketHandler(String_Message, &clientReceiver);
-	if (!client.Connect(127, 0, 0, 1, port)) {
-		std::cout << "Client failed to connect!" << std::endl;
-		return;
-	}
-
-	NetworkedGame* game = new NetworkedGame();
-	if (server) {
-		game->StartAsServer();
-	}
-	else {
-		game->StartAsClient(127, 0, 0, 1);
-	}
+	NetworkedGame* game = new NetworkedGame(isServer);
 
 	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyCodes::ESCAPE)) {
 		float dt = w->GetTimer().GetTimeDeltaSeconds();
@@ -254,7 +240,6 @@ void RunClient(Window* w, bool server) {
 		}
 
 		game->UpdateGame(dt);
-		client.UpdateClient();
 
 		if (Window::GetKeyboard()->KeyPressed(KeyCodes::ESCAPE)) {
 			break;
@@ -307,10 +292,10 @@ int main(int argc, char** argv) {
 		std::cout << "Running as client" << std::endl;
 		//RunClient(w);
 	}
-	RunClient(w, isServer);
+	RunGame(w, isServer);
 
-	NetworkedGame* g = new NetworkedGame();
-	w->GetTimer().GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!
+	//NetworkedGame* g = new NetworkedGame(isServer);
+	//w->GetTimer().GetTimeDeltaSeconds(); //Clear the timer so we don't get a larget first dt!
 
 	//TestPathfinding();
 	//TestBehaviourTree();

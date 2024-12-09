@@ -12,6 +12,8 @@ https://research.ncl.ac.uk/game/
 
 #include "Vector.h"
 
+#include <functional>
+
 namespace NCL {
 	class GameTimer;
 	namespace Rendering {

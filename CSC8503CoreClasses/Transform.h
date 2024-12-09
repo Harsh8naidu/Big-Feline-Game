@@ -1,4 +1,6 @@
 #pragma once
+#include "maths.h"
+#include "Quaternion.h"
 
 using std::vector;
 

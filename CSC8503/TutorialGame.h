@@ -68,6 +68,7 @@ namespace NCL {
 			void BridgeConstraintTest();
 
 			StateGameObject* AddStateObjectToWorld(const Vector3& position);
+			StateGameObject* AddAngryGooseToWorld(const Vector3& position);
 			StateGameObject* testStateObject;
 
 #ifdef USEVULKAN
