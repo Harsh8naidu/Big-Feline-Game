@@ -4,6 +4,8 @@
 
 // Header included later
 #include "Layer.h"
+#include "Debug.h"
+#include <string>
 
 using std::vector;
 
@@ -62,12 +64,26 @@ namespace NCL::CSC8503 {
 			physicsObject = newObject;
 		}
 
+		void SetActive(bool active) {
+			isActive = active;
+		}
+
 		const std::string& GetName() const {
 			return name;
 		}
 
+		int GetScore() const {
+			return score;
+		}
+
 		virtual void OnCollisionBegin(GameObject* otherObject) {
 			//std::cout << "OnCollisionBegin event occured!\n";
+			if (name == "player" && otherObject->GetName() == "bonus") {
+				otherObject->SetActive(false);
+				std::cout << "Score: " << ++score << std::endl;
+				
+			}
+			Debug::Print("Score: " + std::to_string(score), Vector2(0, 0));
 		}
 
 		virtual void OnCollisionEnd(GameObject* otherObject) {
@@ -103,6 +119,7 @@ namespace NCL::CSC8503 {
 		Vector3 broadphaseAABB;
 
 		int layer;
+		int score;
 	};
 }
 

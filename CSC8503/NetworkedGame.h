@@ -73,6 +73,8 @@ namespace NCL {
 			GameServer* server = nullptr;
 
 			NetworkObject* networkObject = nullptr;
+
+			int score = 0;
 		};
 	}
 }

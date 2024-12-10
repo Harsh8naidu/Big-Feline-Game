@@ -109,6 +109,10 @@ void NetworkedGame::UpdateGame(float dt) {
 		server->UpdateServer();
 	}
 
+	score = player->GetScore();
+
+	Debug::Print("Score: " + std::to_string(score), Vector2(75, 15), Debug::GREEN);
+
 	TutorialGame::UpdateGame(dt);
 }
 
