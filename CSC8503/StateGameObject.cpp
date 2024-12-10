@@ -11,6 +11,7 @@ StateGameObject::StateGameObject(const std::vector<Vector3>& path) {
 	counter = 0.0f;
 	waypointIndex = 0;
 	waypoints = path;
+	movingForward = true; // Start by moving forward along the path
 
 	stateMachine = new StateMachine();
 
@@ -26,20 +27,21 @@ StateGameObject::StateGameObject(const std::vector<Vector3>& path) {
 		this->MoveToWaypoint(dt);
 		});
 
-	State* idleState = new State([&](float dt)->void {
-		// Idle state for when the path is complete
-		this->Idle(dt);
-		});
+	//State* idleState = new State([&](float dt)->void {
+	//	// Idle state for when the path is complete
+	//	this->Idle(dt);
+	//	});
 
 	stateMachine->AddState(moveState);
-	stateMachine->AddState(idleState);
+	//stateMachine->AddState(idleState);
 
-	stateMachine->AddTransition(new StateTransition(moveState, idleState, [&]()->bool {
+	/*stateMachine->AddTransition(new StateTransition(moveState, idleState, [&]()->bool {
 		return waypointIndex >= waypoints.size();
-	}));
+	}));*/
 
-	stateMachine->AddTransition(new StateTransition(idleState, moveState, [&]()->bool {
-		return waypointIndex < waypoints.size();
+	stateMachine->AddTransition(new StateTransition(moveState, moveState, [&]()->bool {
+		// Switch direction when we reach the end or the start
+		return waypointIndex >= waypoints.size() || waypointIndex < 0;
 		}));
 }
 
@@ -56,7 +58,7 @@ void StateGameObject::Update(float dt) {
 }
 
 void StateGameObject::MoveToWaypoint(float dt) {
-	if (waypointIndex >= waypoints.size()) return;
+	if (waypointIndex < 0 || waypointIndex >= waypoints.size()) return;
 
 	Vector3 currentPos = GetTransform().GetPosition();
 	Vector3 targetPos = waypoints[waypointIndex];
@@ -64,9 +66,22 @@ void StateGameObject::MoveToWaypoint(float dt) {
 	Vector3 direction = targetPos - currentPos;
 	float distance = Vector::Length(direction);
 
-	std::cout << "Distance: " << distance << std::endl;
 	if (distance < 11.0f) {
-		waypointIndex++;
+		// Move to the next or previous waypoint depending on direction
+		if (movingForward) {
+			waypointIndex++;
+			if (waypointIndex >= waypoints.size()) {
+				movingForward = false; // Reverse direction
+				waypointIndex = waypoints.size() - 2; // Go back one step
+			}
+		}
+		else {
+			waypointIndex--;
+			if (waypointIndex < 0) {
+				movingForward = true; // Reverse direction
+				waypointIndex = 1; // Start from second waypoint
+			}
+		}
 	}
 	else {
 		Vector::Normalise(direction);
@@ -75,7 +90,7 @@ void StateGameObject::MoveToWaypoint(float dt) {
 }
 
 void StateGameObject::Idle(float dt) {
-	// Optional idle behavior, like oscillating or spinning in place
+	// Optional idle behavior, not interested in this for now
 	std::cout << "Idle State" << std::endl;
 }
 

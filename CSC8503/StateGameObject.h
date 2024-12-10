@@ -27,6 +27,7 @@ namespace NCL {
             float counter;
 			int waypointIndex;
 			std::vector<Vector3> waypoints;
+			bool movingForward;
         };
     }
 }
