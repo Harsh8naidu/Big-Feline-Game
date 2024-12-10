@@ -254,7 +254,7 @@ void NetworkedGame::SetupEnemyPath() {
 	}
 
 	// Add the enemy to the world
-	angryGoose = AddAngryGooseToWorld(startPos, path);
+	angryGoose = AddAngryGooseToWorld(startPos, path, player, world);
 }
 
 

@@ -3,45 +3,41 @@
 #include "StateMachine.h"
 #include "State.h"
 #include "PhysicsObject.h"
+#include <GameWorld.h>
 
 using namespace NCL;
 using namespace CSC8503;
 
-StateGameObject::StateGameObject(const std::vector<Vector3>& path) {
+StateGameObject::StateGameObject(const std::vector<Vector3>& path, GameObject* playerObj, GameWorld* world) {
 	counter = 0.0f;
 	waypointIndex = 0;
 	waypoints = path;
 	movingForward = true; // Start by moving forward along the path
+	player = playerObj;
+	gameWorld = world;
 
 	stateMachine = new StateMachine();
-
-	/*State* stateA = new State([&](float dt)->void {
-		this->MoveLeft(dt);
-	});
-
-	State* stateB = new State([&](float dt)->void {
-		this->MoveRight(dt);
-	});*/
 
 	State* moveState = new State([&](float dt)->void {
 		this->MoveToWaypoint(dt);
 		});
 
-	//State* idleState = new State([&](float dt)->void {
-	//	// Idle state for when the path is complete
-	//	this->Idle(dt);
-	//	});
+	// Chasing state
+	State* chaseState = new State([&](float dt)->void {
+		this->ChasePlayer(dt);
+		});
 
 	stateMachine->AddState(moveState);
-	//stateMachine->AddState(idleState);
+	stateMachine->AddState(chaseState);
 
-	/*stateMachine->AddTransition(new StateTransition(moveState, idleState, [&]()->bool {
-		return waypointIndex >= waypoints.size();
-	}));*/
+	// Transition from path-following to chasing
+	stateMachine->AddTransition(new StateTransition(moveState, chaseState, [&]()->bool {
+		return this->DetectPlayer();
+		}));
 
-	stateMachine->AddTransition(new StateTransition(moveState, moveState, [&]()->bool {
-		// Switch direction when we reach the end or the start
-		return waypointIndex >= waypoints.size() || waypointIndex < 0;
+	// Transition from chasing back to path-following
+	stateMachine->AddTransition(new StateTransition(chaseState, moveState, [&]()->bool {
+		return !this->DetectPlayer();
 		}));
 }
 
@@ -87,6 +83,43 @@ void StateGameObject::MoveToWaypoint(float dt) {
 		Vector::Normalise(direction);
 		GetPhysicsObject()->AddForce(direction * 1.0f);
 	}
+}
+
+void StateGameObject::ChasePlayer(float dt) {
+	if (!player) return;
+
+	Vector3 currentPos = GetTransform().GetPosition();
+	Vector3 playerPos = player->GetTransform().GetPosition();
+
+	Vector3 direction = playerPos - currentPos;
+	Vector::Normalise(direction);
+
+	GetPhysicsObject()->AddForce(direction * 80.0f); // Faster speed when chasing
+}
+
+bool StateGameObject::DetectPlayer() {
+	
+
+	if (!player || !gameWorld) return false;
+
+	Vector3 currentPos = GetTransform().GetPosition();
+	Vector3 playerPos = player->GetTransform().GetPosition();
+	Vector3 direction = playerPos - currentPos;
+
+	Ray ray(currentPos, Vector::Normalise(direction));
+	RayCollision collision;
+
+	// Check if the ray hits the player
+	if (gameWorld->Raycast(ray, collision, true)) {
+		
+		if (collision.node == player) {
+			std::cout << "Detecting player" << std::endl;
+			Debug::DrawLine(currentPos, playerPos, Vector4(1, 0, 0, 1)); // Debugging line to visualize the ray
+			player->SetActive(false); // Deactivate the player
+			return true;
+		}
+	}
+	return false;
 }
 
 void StateGameObject::Idle(float dt) {

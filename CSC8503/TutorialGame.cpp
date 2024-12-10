@@ -589,11 +589,11 @@ StateGameObject* TutorialGame::AddStateObjectToWorld(const Vector3& position)
 	return apple;
 }
 
-StateGameObject* TutorialGame::AddAngryGooseToWorld(const Vector3& position, const std::vector<Vector3>& path) {
+StateGameObject* TutorialGame::AddAngryGooseToWorld(const Vector3& position, const std::vector<Vector3>& path, GameObject* player, GameWorld* world) {
 	float meshSize = 3.0f;
 	float inverseMass = 0.5f;
 
-	StateGameObject* character = new StateGameObject(path);
+	StateGameObject* character = new StateGameObject(path, player, world);
 
 	AABBVolume* volume = new AABBVolume(Vector3(0.5f, 0.9f, 0.5f) * meshSize);
 	character->SetBoundingVolume((CollisionVolume*)volume);

@@ -29,7 +29,7 @@ namespace NCL {
 				return wallPositions;
 			}
 
-			StateGameObject* AddAngryGooseToWorld(const Vector3& position, const std::vector<Vector3>& path);
+			StateGameObject* AddAngryGooseToWorld(const Vector3& position, const std::vector<Vector3>& path, GameObject* player, GameWorld* world);
 
 		protected:
 			void InitialiseAssets();

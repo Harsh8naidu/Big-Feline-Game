@@ -4,16 +4,22 @@
 namespace NCL {
     namespace CSC8503 {
         class StateMachine;
+		class GameWorld;
+		class GameObject;
         class StateGameObject : public GameObject  {
         public:
             StateGameObject();
             ~StateGameObject();
 
-            StateGameObject(const std::vector<Vector3>& path);
+            StateGameObject(const std::vector<Vector3>& path, GameObject* playerObj, GameWorld* world);
 
             virtual void Update(float dt);
 
             void MoveToWaypoint(float dt);
+
+            void ChasePlayer(float dt);
+
+            bool DetectPlayer();
 
             void Idle(float dt);
 
@@ -28,6 +34,9 @@ namespace NCL {
 			int waypointIndex;
 			std::vector<Vector3> waypoints;
 			bool movingForward;
+
+			GameObject* player;
+			GameWorld* gameWorld;
         };
     }
 }
