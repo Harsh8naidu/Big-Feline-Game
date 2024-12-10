@@ -29,6 +29,8 @@ namespace NCL {
 				return wallPositions;
 			}
 
+			StateGameObject* AddAngryGooseToWorld(const Vector3& position, const std::vector<Vector3>& path);
+
 		protected:
 			void InitialiseAssets();
 
@@ -68,8 +70,11 @@ namespace NCL {
 			void BridgeConstraintTest();
 
 			StateGameObject* AddStateObjectToWorld(const Vector3& position);
-			StateGameObject* AddAngryGooseToWorld(const Vector3& position);
+
+			
+			
 			StateGameObject* testStateObject;
+			StateGameObject* angryGoose;
 
 #ifdef USEVULKAN
 			GameTechVulkanRenderer*	renderer;

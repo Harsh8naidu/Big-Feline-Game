@@ -9,14 +9,24 @@ namespace NCL {
             StateGameObject();
             ~StateGameObject();
 
+            StateGameObject(const std::vector<Vector3>& path);
+
             virtual void Update(float dt);
+
+            void MoveToWaypoint(float dt);
+
+            void Idle(float dt);
 
         protected:
             void MoveLeft(float dt);
             void MoveRight(float dt);
 
             StateMachine* stateMachine;
+
+            // Stuff to move the enemy AI
             float counter;
+			int waypointIndex;
+			std::vector<Vector3> waypoints;
         };
     }
 }

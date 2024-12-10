@@ -589,13 +589,13 @@ StateGameObject* TutorialGame::AddStateObjectToWorld(const Vector3& position)
 	return apple;
 }
 
-StateGameObject* TutorialGame::AddAngryGooseToWorld(const Vector3& position) {
+StateGameObject* TutorialGame::AddAngryGooseToWorld(const Vector3& position, const std::vector<Vector3>& path) {
 	float meshSize = 3.0f;
 	float inverseMass = 0.5f;
 
-	StateGameObject* character = new StateGameObject();
+	StateGameObject* character = new StateGameObject(path);
 
-	AABBVolume* volume = new AABBVolume(Vector3(0.3f, 0.9f, 0.3f) * meshSize);
+	AABBVolume* volume = new AABBVolume(Vector3(0.5f, 0.9f, 0.5f) * meshSize);
 	character->SetBoundingVolume((CollisionVolume*)volume);
 
 	character->GetTransform()
@@ -609,6 +609,8 @@ StateGameObject* TutorialGame::AddAngryGooseToWorld(const Vector3& position) {
 	character->GetPhysicsObject()->InitSphereInertia();
 
 	world->AddGameObject(character);
+
+	std::cout << "Goose added to the world" << std::endl;
 
 	return character;
 }

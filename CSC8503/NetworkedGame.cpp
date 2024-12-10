@@ -113,6 +113,10 @@ void NetworkedGame::UpdateGame(float dt) {
 
 	Debug::Print("Score: " + std::to_string(score), Vector2(75, 15), Debug::GREEN);
 
+	if (angryGoose) {
+		angryGoose->Update(dt);
+	}
+
 	TutorialGame::UpdateGame(dt);
 }
 
@@ -200,7 +204,7 @@ void NetworkedGame::TestPathfinding() {
 	NavigationGrid grid("TestGrid1.txt");
 
 	// Generate the maze
-	game->GenerateMaze(grid);
+	//game->GenerateMaze(grid);
 
 	// Add the maze to the game world
 	
@@ -226,8 +230,35 @@ void NetworkedGame::DisplayPathfinding() {
 	}
 }
 
+void NetworkedGame::SetupEnemyPath() {
+	NavigationGrid grid("TestGrid1.txt");
+
+	// Generate maze and find path
+	game->GenerateMaze(grid);
+
+	NavigationPath outPath;
+	Vector3 startPos(80, 0, 10); // Starting position
+	Vector3 endPos(80, 0, 80);   // End position
+
+	bool found = grid.FindPath(startPos, endPos, outPath);
+
+	std::vector<Vector3> path;
+	Vector3 pos;
+	while (outPath.PopWaypoint(pos)) {
+		path.push_back(pos);
+	}
+
+	if (path.empty()) {
+		std::cout << "No path found for enemy!" << std::endl;
+		return;
+	}
+
+	// Add the enemy to the world
+	angryGoose = AddAngryGooseToWorld(startPos, path);
+}
+
+
 void NetworkedGame::AddMazeToWorld() {
-	std::cout << "Adding maze to world..." << std::endl;
 	Vector3 cubeSize = Vector3(5, 5, 5);
 	const auto& wallPositions = game->GetWallPositions();
 
@@ -247,14 +278,6 @@ void NetworkedGame::StartLevel() {
 
 	AddFloorToWorld(Vector3(0, -2, 0));
 
-	//AddEnemyToWorld(Vector3(30, 2, -30));
-
-	//testStateObject = AddStateObjectToWorld(Vector3(0, 10, -10));
-
-	gooseEnemy = AddAngryGooseToWorld(Vector3(50, 2, -50));
-
-	angryGooseAI = new AngryGoose(gooseEnemy);
-
 	AddFlyingStairs();
 
 	bonus1 = AddBonusToWorld(Vector3(-30, 2, 0));
@@ -264,6 +287,8 @@ void NetworkedGame::StartLevel() {
 	AddMazeToWorld();
 
 	player = SpawnPlayer();
+
+	SetupEnemyPath();
 
 	//networkObject = new NetworkObject(playerToControl, 1, player1);
 

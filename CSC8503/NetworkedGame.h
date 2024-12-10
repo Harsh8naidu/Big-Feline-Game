@@ -4,7 +4,6 @@
 #include "Player.h"
 
 #include <vector>
-#include "AngryGooseAI.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -39,6 +38,8 @@ namespace NCL {
 			void TestPathfinding();
 			void DisplayPathfinding();
 
+			void SetupEnemyPath();
+
 		protected:
 			void UpdateAsServer(float dt);
 			void UpdateAsClient(float dt);
@@ -66,7 +67,6 @@ namespace NCL {
 			NavigationGrid* gridForMaze;
 			TutorialGame* game = new TutorialGame();
 
-			AngryGoose* angryGooseAI;
 			StateGameObject* gooseEnemy;
 
 			GameClient* client = nullptr;
