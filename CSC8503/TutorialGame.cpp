@@ -155,8 +155,6 @@ void TutorialGame::UpdateGame(float dt) {
 		}
 	}
 
-
-
 	UpdateKeys();
 
 	if (useGravity) {
@@ -204,6 +202,8 @@ void TutorialGame::UpdateGame(float dt) {
 	if (testStateObject) {
 		testStateObject->Update(dt);
 	}
+
+	bonus1->GameObjectUpdate(dt);
 }
 
 void TutorialGame::UpdateKeys() {
@@ -448,9 +448,17 @@ void TutorialGame::GenerateMaze(NavigationGrid& grid) {
 
 void TutorialGame::AddFlyingStairs() {
 	Vector3 cubeSize = Vector3(5, 5, 5);
-
-	for (int i = 0; i < 10; ++i) {
-		Vector3 position = Vector3(-50, 5 + (i * 10), i * 10);
+	Vector3 position = Vector3(0, 0, 0);
+	for (int i = 0; i < 12; ++i) {
+		if (i < 6) {
+			// Ascending stairs
+			position = Vector3(-50, 5 + (i * 10), i * 10);
+		}
+		else {
+			// Descending stairs
+			int descendIndex = i - 6;
+			position = Vector3(-50, 55 - (descendIndex * 10), (6 + descendIndex) * 10);
+		}
 		AddCubeToWorld(position, cubeSize, 0);
 	}
 }

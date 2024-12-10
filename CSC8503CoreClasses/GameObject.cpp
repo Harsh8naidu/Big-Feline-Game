@@ -3,6 +3,7 @@
 #include "PhysicsObject.h"
 #include "RenderObject.h"
 #include "NetworkObject.h"
+#include "Maths.h"
 
 using namespace NCL::CSC8503;
 
@@ -57,6 +58,18 @@ within its overridden Update method. */
 
 void NCL::CSC8503::GameObject::GameObjectUpdate(float dt)
 {
-	
-	
+	if (this->GetName() == "bonus") {
+		Quaternion currentOrientation = this->GetTransform().GetOrientation();
+		
+		float rotationSpeed = 3000.0f;
+		float angle = rotationSpeed * dt;
+
+		Quaternion yRotation = Quaternion::AxisAngleToQuaterion(Vector3(0, 1, 0), Maths::DegreesToRadians(angle));
+			
+		currentOrientation = currentOrientation * yRotation;
+
+		currentOrientation.Normalise();
+
+		this->GetTransform().SetOrientation(currentOrientation);
+	}
 }

@@ -76,14 +76,18 @@ namespace NCL::CSC8503 {
 			return score;
 		}
 
+		void SetCollected(bool state) { collected = state; }
+		bool IsCollected() const { return collected; }
+
 		virtual void OnCollisionBegin(GameObject* otherObject) {
 			//std::cout << "OnCollisionBegin event occured!\n";
 			if (name == "player" && otherObject->GetName() == "bonus") {
-				otherObject->SetActive(false);
-				std::cout << "Score: " << ++score << std::endl;
-				
+				if (!otherObject->IsCollected()) {
+					otherObject->SetCollected(true); // Mark it as collected
+					otherObject->SetActive(false);  // Deactivate the object
+					std::cout << "Score: " << ++score << std::endl;
+				}
 			}
-			Debug::Print("Score: " + std::to_string(score), Vector2(0, 0));
 		}
 
 		virtual void OnCollisionEnd(GameObject* otherObject) {
@@ -120,6 +124,7 @@ namespace NCL::CSC8503 {
 
 		int layer;
 		int score;
+		bool collected = false;
 	};
 }
 

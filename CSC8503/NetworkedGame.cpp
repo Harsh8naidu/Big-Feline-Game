@@ -259,6 +259,8 @@ void NetworkedGame::StartLevel() {
 
 	bonus1 = AddBonusToWorld(Vector3(-30, 2, 0));
 
+	bonus2 = AddBonusToWorld(Vector3(-50, 60.5, 55));
+
 	AddMazeToWorld();
 
 	player = SpawnPlayer();
