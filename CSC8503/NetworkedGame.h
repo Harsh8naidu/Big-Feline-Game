@@ -5,6 +5,7 @@
 
 #include <vector>
 
+
 namespace NCL {
 	namespace CSC8503 {
 		class GameServer;
@@ -12,9 +13,11 @@ namespace NCL {
 		class NetworkPlayer;
 		class Player;
 		class NetworkObject;
+		class TestPacketReceiver;
 
 		class NetworkedGame : public TutorialGame {
 		public:
+			NetworkedGame();
 			NetworkedGame(bool isServer);
 			~NetworkedGame();
 
@@ -23,7 +26,7 @@ namespace NCL {
 
 			void UpdateGame(float dt) override;
 
-			GameObject* SpawnPlayer();
+			GameObject* SpawnPlayer(Vector3 playerSpawnPosition);
 
 			void StartLevel();
 
@@ -40,6 +43,11 @@ namespace NCL {
 
 			void SetupEnemyPath();
 
+			std::map<int, NetworkPlayer*> playerPeerMap;
+
+			TestPacketReceiver* clientReceiver;
+			TestPacketReceiver* serverReceiver;
+
 		protected:
 			void UpdateAsServer(float dt);
 			void UpdateAsClient(float dt);
@@ -49,8 +57,6 @@ namespace NCL {
 
 			std::map<int, int> stateIDs;
 
-			GameServer* thisServer;
-			GameClient* thisClient;
 			float timeToNextPacket;
 			int packetsToSnapshot;
 
@@ -60,7 +66,7 @@ namespace NCL {
 			GameObject* localPlayer;
 
 			std::map<int, Player*> players;
-			std::map<int, NetworkPlayer*> playerPeerMap;
+			
 
 			vector<Vector3> testNodes;
 
@@ -75,6 +81,21 @@ namespace NCL {
 			NetworkObject* networkObject = nullptr;
 
 			int score = 0;
+		};
+
+		class TestPacketReceiver : public PacketReceiver {
+		public:
+			TestPacketReceiver(std::string name) {
+				this->name = name;
+			}
+
+			void ReceivePacket(int type, GamePacket* payload, int source);
+
+			NetworkedGame* game;
+		protected:
+			std::string name;
+			int connectedClientID;
+			int connectedServerID;
 		};
 	}
 }

@@ -19,6 +19,11 @@ namespace NCL::CSC8503 {
 		GameObject(const std::string& name = "");
 		~GameObject();
 
+		void SetNetworkObject(NetworkObject* obj) {
+			this->networkObject = obj;
+		}
+
+
 		// Getter and setter for layer
 		void SetLayer(Layer layer) {
 			this->layer = static_cast<int>(layer); // Convert to int using static_cast

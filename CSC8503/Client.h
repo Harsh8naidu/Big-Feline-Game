@@ -11,7 +11,7 @@ class ClientPacketReceiver : public PacketReceiver {
 public:
     ClientPacketReceiver(const std::string& name);
 
-    void ReceivePacket(int type, GamePacket* payload, int source) override;
+    //void ReceivePacket(int type, GamePacket* payload, int source) override;
 
 protected:
     std::string name;
@@ -28,7 +28,7 @@ public:
 private:
     std::string name;
     GameClient* gameClient;
-    ClientPacketReceiver packetReceiver;
+    //ClientPacketReceiver packetReceiver;
 
     std::vector<uint8_t> ParseIPAddress(const std::string& ipAddress);
 };

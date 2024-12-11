@@ -34,13 +34,14 @@ namespace NCL::CSC8503 {
 		char	buttonstates[8];
 
 		ClientPacket() {
+			type = Player_Update;
 			size = sizeof(ClientPacket);
 		}
 	};
 
 	class NetworkObject		{
 	public:
-		NetworkObject(GameObject& o, int id, Player* player = nullptr);
+		NetworkObject(GameObject& o, int id);
 		virtual ~NetworkObject();
 
 		//Called by clients

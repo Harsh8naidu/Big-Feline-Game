@@ -3,7 +3,7 @@
 #include <thread>  
 #include <chrono>
 #include "GameServer.h"
-#include "TestPacketReceiver.h"
+#include "NetworkedGame.h"
 
 using namespace NCL;
 using namespace CSC8503;

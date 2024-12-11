@@ -10,26 +10,26 @@
 ClientPacketReceiver::ClientPacketReceiver(const std::string& name)
     : name(name) {}
 
-void ClientPacketReceiver::ReceivePacket(int type, GamePacket* payload, int source)
-{
-    if (type == String_Message) {
-        // Cast the payload to StringPacket
-		StringPacket* realPacket = static_cast<StringPacket*>(payload);
-        if (realPacket) {
-            std::string message = realPacket->GetStringFromData();
-            std::cout << name << " received message: " << message << " from source: " << source << std::endl;
-        }
-        else {
-            std::cerr << name << " received an invalid String_Message packet!" << std::endl;
-        }
-    }
-    else {
-        std::cerr << name << " received an unknown packet type: " << type << std::endl;
-    }
-}
+//void ClientPacketReceiver::ReceivePacket(int type, GamePacket* payload, int source)
+//{
+//    if (type == String_Message) {
+//        // Cast the payload to StringPacket
+//		StringPacket* realPacket = static_cast<StringPacket*>(payload);
+//        if (realPacket) {
+//            std::string message = realPacket->GetStringFromData();
+//            std::cout << name << " received message: " << message << " from source: " << source << std::endl;
+//        }
+//        else {
+//            std::cerr << name << " received an invalid String_Message packet!" << std::endl;
+//        }
+//    }
+//    else {
+//        std::cerr << name << " received an unknown packet type: " << type << std::endl;
+//    }
+//}
 
 Client::Client(const std::string& name, const std::string& serverIP, int serverPort)
-    : name(name), packetReceiver(name) {
+    : name(name){
     // Create the GameClient instance
     gameClient = new GameClient();
 
@@ -45,7 +45,7 @@ Client::Client(const std::string& name, const std::string& serverIP, int serverP
     }
 
     // Register the packet receiver
-    gameClient->RegisterPacketHandler(String_Message, &packetReceiver);
+    //gameClient->RegisterPacketHandler(String_Message, &packetReceiver);
 }
 
 Client::~Client() {

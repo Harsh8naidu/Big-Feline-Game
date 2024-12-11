@@ -4,7 +4,6 @@
 #include <string>
 #include <map>
 
-
 struct _ENetHost;
 struct _ENetPeer;
 struct _ENetEvent;
@@ -19,6 +18,11 @@ enum BasicNetworkMessages {
 	Received_State, //received from a client, informs that its received packet n
 	Player_Connected,
 	Player_Disconnected,
+	Client_Connected,
+	Client_Disconnected,
+	Server_Connected,
+	Server_Disconnected,
+	Player_Update,
 	Shutdown,
 
 	Ack_State // Added by me for acknowledgment packets
@@ -60,6 +64,35 @@ struct StringPacket : public GamePacket {
 
 	char data[1400 - sizeof(GamePacket)];
 };
+
+struct ClientConnectedPacket : public GamePacket {
+	int clientID;
+
+	ClientConnectedPacket(int id) {
+		type = BasicNetworkMessages::Client_Connected;
+		clientID = id;
+		size = sizeof(int);
+	}
+};
+
+struct ClientDisconnectedPacket : public GamePacket {
+	int playerID;
+
+	ClientDisconnectedPacket() {
+		type = Client_Disconnected;
+		size = sizeof(ClientDisconnectedPacket);
+	}
+};
+
+struct ServerConnectedPacket : public GamePacket {
+	int serverID;
+
+	ServerConnectedPacket() {
+		type = Server_Connected;
+		size = sizeof(ServerConnectedPacket);
+	}
+};
+
 
 class PacketReceiver {
 public:

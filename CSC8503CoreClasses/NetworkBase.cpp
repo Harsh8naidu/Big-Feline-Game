@@ -19,11 +19,14 @@ void NetworkBase::Destroy() {
 }
 
 bool NetworkBase::ProcessPacket(GamePacket* packet, int peerID) {
+	
 	PacketHandlerIterator firstHandler;
 	PacketHandlerIterator lastHandler;
 
-	bool canHandle = GetPacketHandlers(packet->type, firstHandler, lastHandler);
+	bool canHandle = GetPacketHandlers(packet->type, firstHandler, lastHandler) && firstHandler != lastHandler;
 	if (canHandle) {
+		
+		std::cout << "Processing packets" << std::endl;
 		for (auto i = firstHandler; i != lastHandler; ++i) {
 			i->second->ReceivePacket(packet->type, packet, peerID);
 		}
