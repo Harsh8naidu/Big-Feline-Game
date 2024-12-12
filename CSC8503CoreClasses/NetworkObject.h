@@ -55,14 +55,19 @@ namespace NCL::CSC8503 {
 			return associatedPlayer;
 		}
 
-	protected:
+		// The below functions have been made public to be accessed in the NetworkedGame class
+		virtual bool ReadDeltaPacket(DeltaPacket& p);
+		virtual bool ReadFullPacket(FullPacket& p);
 
 		NetworkState& GetLatestNetworkState();
 
+	protected:
+
+		
+
 		bool GetNetworkState(int frameID, NetworkState& state);
 
-		virtual bool ReadDeltaPacket(DeltaPacket &p);
-		virtual bool ReadFullPacket(FullPacket &p);
+		
 
 		virtual bool WriteDeltaPacket(GamePacket**p, int stateID);
 		virtual bool WriteFullPacket(GamePacket**p);

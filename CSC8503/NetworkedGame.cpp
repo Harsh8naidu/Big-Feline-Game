@@ -135,11 +135,10 @@ void TestPacketReceiver::ReceivePacket(int type, GamePacket* payload, int source
 	if (type == Player_Update) {
 		PlayerUpdatePacket* updatePacket = (PlayerUpdatePacket*)payload;
 
-		int playerID = updatePacket->playerID;
 		Vector3 newPosition = updatePacket->position;
 		Quaternion newOrientation = updatePacket->orientation;
 
-		std::cout << name << " received Player_Update for Player ID: " << playerID << std::endl;
+		std::cout << name << " received Player_Update for Player ID: " << source << std::endl;
 
 		// Locate the player object in the game world
 		auto playerIter = game->playerPeerMap.find(source);
@@ -150,14 +149,74 @@ void TestPacketReceiver::ReceivePacket(int type, GamePacket* payload, int source
 			player->GetTransform().SetPosition(newPosition);
 			player->GetTransform().SetOrientation(newOrientation);
 
-			std::cout << "Updated Player ID " << playerID
+			/*std::cout << "Updated Player ID " << source
 				<< " to Position: " << newPosition.x << ", " << newPosition.y << ", " << newPosition.z
-				<< " and Orientation: " << newOrientation.x << newOrientation.y << newOrientation.z << std::endl;
+				<< " and Orientation: " << newOrientation.x << newOrientation.y << newOrientation.z << std::endl;*/
 		}
 		else {
-			std::cerr << "Player ID " << playerID << " not found in playerPeerMap!" << std::endl;
+			std::cerr << "Player ID " << source << " not found in playerPeerMap!" << std::endl;
 		}
 	}
+<<<<<<< HEAD
+=======
+
+	if (type == Full_State) {
+		FullPacket* fullPacket = (FullPacket*)payload;
+
+		int objectID = fullPacket->objectID; // Extract the ID of the networked object
+		NetworkState fullState = fullPacket->fullState; // Extract the state data
+
+		std::cout << name << " received Full_State for Object ID: " << objectID << std::endl;
+
+		// Locate the network object in the game
+		auto objectIter = game->networkObjects.find(objectID);
+		if (objectIter != game->networkObjects.end()) {
+			NetworkObject* networkObject = objectIter->second;
+
+			// Apply the full state to the network object
+			networkObject->ReadFullPacket(*fullPacket);
+
+			std::cout << "Updated Object ID " << objectID
+				<< " to Position: " << fullState.position.x << ", "
+				<< fullState.position.y << ", " << fullState.position.z
+				<< " and Orientation: " << fullState.orientation.x << ", "
+				<< fullState.orientation.y << ", " << fullState.orientation.z
+				<< ", " << fullState.orientation.w << std::endl;
+		}
+		else {
+			std::cerr << "Object ID " << objectID << " not found in networkObjects!" << std::endl;
+		}
+	}
+
+	if (type == Delta_State) {
+		DeltaPacket* deltaPacket = (DeltaPacket*)payload;
+
+		int objectID = deltaPacket->objectID; // Extract the ID of the networked object
+
+		std::cout << name << " received Delta_State for Object ID: " << objectID << std::endl;
+
+		// Locate the network object in the game
+		auto objectIter = game->networkObjects.find(objectID);
+		if (objectIter != game->networkObjects.end()) {
+			NetworkObject* networkObject = objectIter->second;
+
+			// Apply the delta state to the network object
+			networkObject->ReadDeltaPacket(*deltaPacket);
+
+			std::cout << "Updated Object ID " << objectID
+				<< " to Position: " << networkObject->GetLatestNetworkState().position.x << ", "
+				<< networkObject->GetLatestNetworkState().position.y << ", "
+				<< networkObject->GetLatestNetworkState().position.z
+				<< " and Orientation: " << networkObject->GetLatestNetworkState().orientation.x << ", "
+				<< networkObject->GetLatestNetworkState().orientation.y << ", "
+				<< networkObject->GetLatestNetworkState().orientation.z << ", "
+				<< networkObject->GetLatestNetworkState().orientation.w << std::endl;
+		}
+		else {
+			std::cerr << "Object ID " << objectID << " not found in networkObjects!" << std::endl;
+		}
+	}
+>>>>>>> 274d4918607564da067c4c81018e1de8c4d5e892
 }
 
 void NetworkedGame::UpdateGame(float dt) {
@@ -373,26 +432,14 @@ void NetworkedGame::StartLevel() {
 	// local player
 	NetworkObject* networkObj = new NetworkObject(*player, 1);
 	player->SetNetworkObject(networkObj);
+	networkObjects.insert(std::make_pair(1, networkObj));
 
 	NetworkObject* networkObj2 = new NetworkObject(*player2, 2);
 	player2->SetNetworkObject(networkObj2);
+	networkObjects.insert(std::make_pair(2, networkObj2));
 
 	SetupEnemyPath();
-
-	//networkObject = new NetworkObject(playerToControl, 1, player1);
-
 }
-
-//void NetworkedGame::ReceivePacket(int type, GamePacket* payload, int source) {
-//	if (type == Ack_State) {
-//		AckPacket* ack = static_cast<AckPacket*>(payload); // Safer cast
-//		auto it = players.find(source); // Explicit lookup
-//		if (it != players.end()) {
-//			Player* player = it->second;
-//			player->AcknowledgePacket(ack->stateID); // Update acknowledgment in Player object
-//		}
-//	}
-//}
 
 
 void NetworkedGame::OnPlayerCollision(NetworkPlayer* a, NetworkPlayer* b) {
@@ -413,17 +460,10 @@ void NetworkedGame::OnPlayerConnected(int playerID) {
 	NetworkPlayer* newPlayer = new NetworkPlayer(this, playerID);
 
 	world->AddGameObject(newPlayer); // Add the new player to the game world
-
-	//// for new clients, create a new network object
-	//NetworkObject* playerNetworkObj = new NetworkObject(*newPlayer, playerID);
-	//newPlayer->SetNetworkObject(playerNetworkObj);
-
+	
 	// Add the new player to the player-peer map
 	playerPeerMap[playerID] = newPlayer;
 	std::cout << "PlayerPeerMap: " << &playerPeerMap[playerID] << std::endl;
-
-	/*NetworkObject* networkObj = new NetworkObject(*newPlayer, playerID);
-	newPlayer->SetNetworkObject(networkObj);*/
 
 	std::cout << "Player " << playerID << " connected!" << std::endl;
 }

@@ -48,6 +48,8 @@ namespace NCL {
 			TestPacketReceiver* clientReceiver;
 			TestPacketReceiver* serverReceiver;
 
+			std::unordered_map<int, NetworkObject*> networkObjects;
+
 		protected:
 			void UpdateAsServer(float dt);
 			void UpdateAsClient(float dt);
@@ -60,7 +62,7 @@ namespace NCL {
 			float timeToNextPacket;
 			int packetsToSnapshot;
 
-			std::vector<NetworkObject*> networkObjects;
+			
 
 			std::map<int, GameObject*> serverPlayers;
 			GameObject* localPlayer;
