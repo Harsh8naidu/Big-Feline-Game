@@ -129,7 +129,7 @@ void TestPacketReceiver::ReceivePacket(int type, GamePacket* payload, int source
 	}
 
 	if (type == Server_Disconnected) {
-		// CleanupServerConnection() // not implemeneted yet
+		std::cout << name << " received server disconnected message" << std::endl;
 	}
 
 	if (type == Player_Update) {
@@ -158,10 +158,7 @@ void TestPacketReceiver::ReceivePacket(int type, GamePacket* payload, int source
 			std::cerr << "Player ID " << playerID << " not found in playerPeerMap!" << std::endl;
 		}
 	}
-
-
 }
-
 
 void NetworkedGame::UpdateGame(float dt) {
 	timeToNextPacket -= dt;
@@ -178,9 +175,11 @@ void NetworkedGame::UpdateGame(float dt) {
 	DisplayPathfinding();
 
 	if (client) {
+		Debug::Print("This is Client Player", Vector2(5, 10), Debug::MAGENTA);
 		client->UpdateClient();
 	}
 	if (server) {
+		Debug::Print("This is Server Player", Vector2(5, 10), Debug::MAGENTA);
 		server->UpdateServer();
 	}
 
