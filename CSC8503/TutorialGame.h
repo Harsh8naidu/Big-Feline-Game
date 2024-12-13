@@ -10,10 +10,11 @@
 #include "StateGameObject.h"
 #include "NavigationGrid.h"
 #include <vector>
+//#include "KittenStateObject.h"
 
 namespace NCL {
 	namespace CSC8503 {
-		
+		class NetworkPlayer;
 		class TutorialGame		{
 		public:
 			TutorialGame();
@@ -22,6 +23,8 @@ namespace NCL {
 			virtual void UpdateGame(float dt);
 
 			void GenerateMaze(NavigationGrid& grid);
+
+			//KittenStateObject* AddKittensT//oWorld(const Vector3& position);
 
 			void AddFlyingStairs();
 
@@ -38,6 +41,8 @@ namespace NCL {
 			void UpdateKeys();
 
 			void InitWorld();
+
+			GameObject* AddDoorToWorld(const Vector3& position);
 
 			/*
 			These are some of the world/object creation functions I created when testing the functionality
@@ -63,7 +68,7 @@ namespace NCL {
 
 			
 
-			GameObject* AddPlayerToWorld(const Vector3& position);
+			NetworkPlayer* AddPlayerToWorld(const Vector3& position, std::string playerName);
 			GameObject* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
 
@@ -71,7 +76,6 @@ namespace NCL {
 
 			StateGameObject* AddStateObjectToWorld(const Vector3& position);
 
-			
 			
 			StateGameObject* testStateObject;
 			StateGameObject* angryGoose;
@@ -100,6 +104,8 @@ namespace NCL {
 			Texture*	basicTex	= nullptr;
 			Shader*		basicShader = nullptr;
 
+			Texture* catTex = nullptr;
+
 			//Coursework Meshes
 			Mesh*	catMesh		= nullptr;
 			Mesh*	kittenMesh	= nullptr;
@@ -115,12 +121,15 @@ namespace NCL {
 
 			GameObject* objClosest = nullptr;
 
-			GameObject* player = nullptr; // Player object cat
+			NetworkPlayer* player = nullptr; // Player object cat
 
-			GameObject* player2 = nullptr;
+			NetworkPlayer* player2 = nullptr;
 
 			GameObject* bonus1 = nullptr;
 			GameObject* bonus2 = nullptr;
+
+			//KittenStateObject* kitten1 = nullptr;
+
 			bool isCameraLocked = false; // Toggle camera lock
 			bool isRotatingAroundObject = false;
 			float rotationAngle = 0.0f; // Angle in radians
@@ -129,6 +138,9 @@ namespace NCL {
 
 
 			std::vector<Vector3> wallPositions;
+
+			Vector3 lockedAngle = Vector3(0, 0, 0);
+
 		};
 	}
 }

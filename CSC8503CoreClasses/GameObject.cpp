@@ -72,4 +72,5 @@ void NCL::CSC8503::GameObject::GameObjectUpdate(float dt)
 
 		this->GetTransform().SetOrientation(currentOrientation);
 	}
+
 }

@@ -8,6 +8,7 @@ https://research.ncl.ac.uk/game/
 */
 #pragma once
 #include <algorithm>
+#include <cmath>
 
 namespace NCL::Maths {
 
@@ -326,6 +327,15 @@ namespace NCL::Maths {
                 output.array[i] = std::clamp(input.array[i], mins.array[i], maxs.array[i]);
             }
             return output;
+        }
+
+        template <typename T, uint32_t n>
+        T Distance(const VectorTemplate<T, n>& a, const VectorTemplate<T, n>& b) {
+            VectorTemplate<T, n> diff;
+            for (int i = 0; i < n; ++i) {
+                diff.array[i] = a.array[i] - b.array[i];
+            }
+            return Length(diff);
         }
     }
 }

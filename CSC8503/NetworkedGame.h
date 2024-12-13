@@ -26,7 +26,7 @@ namespace NCL {
 
 			void UpdateGame(float dt) override;
 
-			GameObject* SpawnPlayer(Vector3 playerSpawnPosition);
+			NetworkPlayer* SpawnPlayer(Vector3 playerSpawnPosition, std::string playerName);
 
 			void StartLevel();
 
@@ -37,6 +37,7 @@ namespace NCL {
 			void TestBehaviourTree();
 
 			void AddMazeToWorld();
+			void AddDoorPuzzle();
 
 			void TestPathfinding();
 			void DisplayPathfinding();
@@ -81,6 +82,8 @@ namespace NCL {
 			GameServer* server = nullptr;
 
 			NetworkObject* networkObject = nullptr;
+
+			NetworkPlayer* newPlayer = nullptr;
 
 			int score = 0;
 		};

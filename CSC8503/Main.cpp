@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
 	w->LockMouseToWindow(true);
 
 	// Determine mode based on command line arguments
-	bool isServer = argc == 1;
+	bool isServer = argc != 1;
 
 	if (isServer) {
 		std::cout << "Running as server" << std::endl;

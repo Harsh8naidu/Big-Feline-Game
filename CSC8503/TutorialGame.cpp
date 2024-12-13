@@ -9,6 +9,7 @@
 #include "StateGameObject.h"
 #include "NetworkedGame.h"
 #include <NavigationGrid.h>
+#include "NetworkPlayer.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -62,6 +63,8 @@ void TutorialGame::InitialiseAssets() {
 	basicTex	= renderer->LoadTexture("checkerboard.png");
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
 
+	catTex = renderer->LoadTexture("GoatBeige.png");
+
 	InitCamera();
 	//InitWorld(); //This is now done in the network tutorial to allow for server/client selection
 }
@@ -76,6 +79,7 @@ TutorialGame::~TutorialGame()	{
 
 	delete basicTex;
 	delete basicShader;
+	delete catTex;
 
 	delete physics;
 	delete renderer;
@@ -88,7 +92,8 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 
 	if (lockedObject == nullptr && isCameraLocked) {
-		lockedObject = player; // lock the camera to the player
+		lockedObject = (GameObject*)player; // lock the camera to the player
+		selectionObject = lockedObject;
 	}
 	
 	if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::C)) {
@@ -99,60 +104,46 @@ void TutorialGame::UpdateGame(float dt) {
 	
 
 	if (lockedObject != nullptr) {
+		// Get the position of the locked object
 		Vector3 objPos = lockedObject->GetTransform().GetPosition();
 
-		if (NCL::Window::GetMouse()->ButtonDown(NCL::MouseButtons::Middle)) {
-			isRotatingAroundObject = !isRotatingAroundObject;
+		// Update camera rotation based on controller input
+		lockedAngle.x -= controller.GetNamedAxis("XLook") * 100.0f * dt;
+		lockedAngle.y -= controller.GetNamedAxis("YLook") * 100.0f * dt;
+		lockedAngle.y = std::max(-89.0f, std::min(89.0f, lockedAngle.y)); // Clamp vertical angle
+
+		// Adjust zoom level with the mouse wheel
+		float scroll = Window::GetMouse()->GetWheelMovement() * 0.1f;
+		lockedOffset -= lockedOffset * scroll;
+
+		// Calculate the offset from the locked object's position
+		Vector3 offset = Quaternion::EulerAnglesToQuaternion(lockedAngle.y, lockedAngle.x, lockedAngle.z) * lockedOffset;
+
+		// Determine the camera's intended position
+		Vector3 camPos = objPos + offset;
+
+		// Handle camera collision with environment
+		Vector3 direction = Vector::Normalise(camPos - objPos);
+		Ray ray = Ray(objPos, direction);
+		RayCollision closestCollision;
+		bool hit = world->Raycast(ray, closestCollision, true, lockedObject);
+
+		if (hit && Vector::Distance(closestCollision.collidedAt, objPos) < Vector::Distance(camPos, objPos)) {
+			// Apply a bias to prevent near-plane clipping
+			float bias = 0.5f;
+			camPos = closestCollision.collidedAt - direction * bias;
 		}
-		if (isRotatingAroundObject) {
-			// Increment the rotation angle
-			rotationAngle += rotationSpeed * dt;
 
-			// Calculate new camera position
-			float camX = objPos.x + distanceFromCat * cos(rotationAngle);
-			float camZ = objPos.z + distanceFromCat * sin(rotationAngle);
-			float camY = objPos.y + lockedOffset.y;
+		// Calculate view matrix and update camera
+		Matrix4 temp = Matrix::View(camPos, objPos, Vector3(0, 1, 0));
+		Matrix4 modelMat = Matrix::Inverse(temp);
 
-			Vector3 camPos = Vector3(camX, camY, camZ);
+		Quaternion q(modelMat);
+		Vector3 angles = q.ToEuler(); // Convert to Euler angles
 
-			// Compute the direction vector from the camera to the object
-			// Calculate the direction vector from the camera to the object
-			Vector3 direction = objPos - camPos;
-
-			// Calculate the length (magnitude) of the direction vector
-			float length = sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
-
-			// Normalize the direction vector by dividing each component by the length
-			if (length > 0.0f) { // To prevent division by zero
-				direction.x /= length;
-				direction.y /= length;
-				direction.z /= length;
-			}
-
-
-			// Calculate yaw and pitch from the direction vector
-			float newYaw = atan2(direction.x, direction.z) * 180.0f / PI;  // Convert to degrees
-			float newPitch = asin(direction.y) * 180.0f / PI;              // Convert to degrees
-
-			// Update the camera position and orientation
-			world->GetMainCamera().SetPosition(camPos);
-			world->GetMainCamera().SetYaw(newYaw);
-			world->GetMainCamera().SetPitch(newPitch);
-		}
-		else {
-			// Default locked camera behavior
-			Vector3 camPos = objPos + lockedOffset;
-
-			Matrix4 temp = Matrix::View(camPos, objPos, Vector3(0, 1, 0));
-			Matrix4 modelMat = Matrix::Inverse(temp);
-
-			Quaternion q(modelMat);
-			Vector3 angles = q.ToEuler();
-
-			world->GetMainCamera().SetPosition(camPos);
-			world->GetMainCamera().SetPitch(angles.x);
-			world->GetMainCamera().SetYaw(angles.y);
-		}
+		world->GetMainCamera().SetPosition(camPos);
+		world->GetMainCamera().SetPitch(angles.x);
+		world->GetMainCamera().SetYaw(angles.y);
 	}
 
 	UpdateKeys();
@@ -232,11 +223,14 @@ void TutorialGame::UpdateKeys() {
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F7)) {
-		world->ShuffleObjects(true);
+		//world->ShuffleObjects(true);
+		player->SetActive(true);
 	}
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::F8)) {
-		world->ShuffleObjects(false);
+		//world->ShuffleObjects(false);
+		player->SetActive(false);
 	}
+
 
 	if (lockedObject) {
 		LockedObjectMovement();
@@ -335,7 +329,29 @@ void TutorialGame::InitWorld() {
 	testStateObject = AddStateObjectToWorld(Vector3(0, 10, -10));
 }
 
+GameObject* TutorialGame::AddDoorToWorld(const Vector3& position) {
+	GameObject* floor = new GameObject();
 
+	Vector3 doorSize = Vector3(4, 5.5, 0.2f);
+	AABBVolume* volume = new AABBVolume(doorSize);
+	floor->SetBoundingVolume((CollisionVolume*)volume);
+	floor->GetTransform()
+		.SetScale(doorSize * 6.0f)
+		.SetPosition(position)
+		.SetOrientation(Quaternion::AxisAngleToQuaterion(Vector3(0, 0, 1), 90));
+
+	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, basicTex, basicShader));
+	floor->SetPhysicsObject(new PhysicsObject(&floor->GetTransform(), floor->GetBoundingVolume()));
+
+	floor->GetPhysicsObject()->SetInverseMass(0);
+	floor->GetPhysicsObject()->InitCubeInertia();
+
+	floor->SetLayer(Layer::IgnoreRaycast); // optional, but useful for the raycast to ignore this object
+
+	world->AddGameObject(floor);
+
+	return floor;
+}
 
 /*
 
@@ -446,6 +462,26 @@ void TutorialGame::GenerateMaze(NavigationGrid& grid) {
 	}
 }
 
+//KittenStateObject* TutorialGame::AddKittensToWorld(const Vector3& position) {
+//	KittenStateObject* kitten = new KittenStateObject();
+//
+//	SphereVolume* volume = new SphereVolume(0.5f);
+//	kitten->SetBoundingVolume((CollisionVolume*)volume);
+//	kitten->GetTransform()
+//		.SetScale(Vector3(2, 2, 2))
+//		.SetPosition(position);
+//
+//	kitten->SetRenderObject(new RenderObject(&kitten->GetTransform(), kittenMesh, nullptr, basicShader));
+//	kitten->SetPhysicsObject(new PhysicsObject(&kitten->GetTransform(), kitten->GetBoundingVolume()));
+//
+//	kitten->GetPhysicsObject()->SetInverseMass(1.0f);
+//	kitten->GetPhysicsObject()->InitSphereInertia();
+//
+//	world->AddGameObject(kitten);
+//
+//	return kitten;
+//}
+
 void TutorialGame::AddFlyingStairs() {
 	Vector3 cubeSize = Vector3(5, 5, 5);
 	Vector3 position = Vector3(0, 0, 0);
@@ -463,11 +499,13 @@ void TutorialGame::AddFlyingStairs() {
 	}
 }
 
-GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
+
+
+NetworkPlayer* TutorialGame::AddPlayerToWorld(const Vector3& position, std::string playerName) {
 	float meshSize		= 3.0f;
 	float inverseMass	= 0.5f;
 
-	GameObject* character = new GameObject("player");
+	NetworkPlayer* character = new NetworkPlayer(playerName);
 	SphereVolume* volume  = new SphereVolume(1.0f);
 
 	character->SetBoundingVolume((CollisionVolume*)volume);
@@ -476,7 +514,7 @@ GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 		.SetScale(Vector3(meshSize, meshSize, meshSize))
 		.SetPosition(position);
 
-	character->SetRenderObject(new RenderObject(&character->GetTransform(), catMesh, nullptr, basicShader));
+	character->SetRenderObject(new RenderObject(&character->GetTransform(), catMesh, catTex, basicShader));
 	character->SetPhysicsObject(new PhysicsObject(&character->GetTransform(), character->GetBoundingVolume()));
 
 	character->GetPhysicsObject()->SetInverseMass(inverseMass);
@@ -484,7 +522,7 @@ GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 
 	world->AddGameObject(character);
 
-	player = character;
+	//player = (NetworkPlayer*)character;
 
 	return character;
 }
@@ -620,7 +658,7 @@ void TutorialGame::InitDefaultFloor() {
 }
 
 void TutorialGame::InitGameExamples() {
-	AddPlayerToWorld(Vector3(0, 5, 0));
+	//AddPlayerToWorld(Vector3(0, 5, 0));
 	AddEnemyToWorld(Vector3(5, 5, 0));
 	AddBonusToWorld(Vector3(10, 5, 0));
 }

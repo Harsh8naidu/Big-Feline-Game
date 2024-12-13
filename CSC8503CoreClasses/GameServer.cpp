@@ -81,6 +81,7 @@ void GameServer::UpdateServer() {
 			GamePacket p;
 			p.type = BasicNetworkMessages::Client_Connected;
 			ProcessPacket(&p, peer);
+			// client count not integrated (just using 1 client for now)
 			clientCount++; // Increment the client count
 		}
 		else if (type == ENetEventType::ENET_EVENT_TYPE_DISCONNECT) {
@@ -88,6 +89,7 @@ void GameServer::UpdateServer() {
 			GamePacket p;
 			p.type = BasicNetworkMessages::Client_Disconnected;
 			ProcessPacket(&p, peer);
+			// client count not integrated (just using 1 client for now)
 			clientCount--; // Decrement the client count
 		}
 		else if (type == ENetEventType::ENET_EVENT_TYPE_RECEIVE) {

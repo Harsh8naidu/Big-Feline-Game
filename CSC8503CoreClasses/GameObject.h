@@ -86,7 +86,19 @@ namespace NCL::CSC8503 {
 
 		virtual void OnCollisionBegin(GameObject* otherObject) {
 			//std::cout << "OnCollisionBegin event occured!\n";
+			/*if (name == "player" || name == "player2" || otherObject->GetName() == "player" || otherObject->GetName() == "player2") {
+			std::cout << name << " collided with " << otherObject->GetName() << std::endl;
+
+			}*/
 			if (name == "player" && otherObject->GetName() == "bonus") {
+				if (!otherObject->IsCollected()) {
+					otherObject->SetCollected(true); // Mark it as collected
+					otherObject->SetActive(false);  // Deactivate the object
+					std::cout << "Score: " << ++score << std::endl;
+				}
+			}
+
+			if (name == "player2" && otherObject->GetName() == "bonus") {
 				if (!otherObject->IsCollected()) {
 					otherObject->SetCollected(true); // Mark it as collected
 					otherObject->SetActive(false);  // Deactivate the object

@@ -6,6 +6,7 @@ namespace NCL {
         class StateMachine;
 		class GameWorld;
 		class GameObject;
+		class NetworkPlayer;
         class StateGameObject : public GameObject  {
         public:
             StateGameObject();
@@ -20,6 +21,8 @@ namespace NCL {
             void ChasePlayer(float dt);
 
             bool DetectPlayer();
+
+            void TogglePlayerWithDelay(NetworkPlayer* player);
 
             void Idle(float dt);
 
@@ -37,6 +40,8 @@ namespace NCL {
 
 			GameObject* player;
 			GameWorld* gameWorld;
+
+            
         };
     }
 }

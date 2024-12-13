@@ -4,9 +4,8 @@
 using namespace NCL;
 using namespace CSC8503;
 
-NetworkPlayer::NetworkPlayer(NetworkedGame* game, int num)	{
-	this->game = game;
-	playerNum  = num;
+NetworkPlayer::NetworkPlayer(std::string playerName) : GameObject(playerName)	{
+	this->name = playerName;
 }
 
 NetworkPlayer::~NetworkPlayer()	{
@@ -20,4 +19,5 @@ void NetworkPlayer::OnCollisionBegin(GameObject* otherObject) {
 			game->OnPlayerCollision(this, (NetworkPlayer*)otherObject);
 		}
 	}
+	GameObject::OnCollisionBegin(otherObject);
 }

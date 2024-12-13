@@ -35,7 +35,7 @@ namespace NCL::CSC8503 {
 
 		ClientPacket() {
 			type = Player_Update;
-			size = sizeof(ClientPacket);
+			size = sizeof(ClientPacket) - sizeof(GamePacket);
 		}
 	};
 

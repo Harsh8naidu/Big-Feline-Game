@@ -30,7 +30,7 @@ NetworkedGame::NetworkedGame(bool isServer)	{
 	timeToNextPacket  = 0.0f;
 	packetsToSnapshot = 0;
 	std::cout << "NetworkedGame Created!" << std::endl;
-	StartLevel();
+	//StartLevel();
 	TestPathfinding();
 
 	// Needs to be part of NetworkedGame class, not local to constructor
@@ -77,28 +77,13 @@ NetworkedGame::~NetworkedGame()	{
 	delete client;
 }
 
-//void NetworkedGame::StartAsServer() {
-//	thisServer = new GameServer(NetworkBase::GetDefaultPort(), 4);
-//
-//	thisServer->RegisterPacketHandler(Received_State, this);
-//
-//	StartLevel();
-//}
-//
-//void NetworkedGame::StartAsClient(char a, char b, char c, char d) {
-//	thisClient = new GameClient();
-//	thisClient->Connect(a, b, c, d, NetworkBase::GetDefaultPort());
-//
-//	thisClient->RegisterPacketHandler(Delta_State, this);
-//	thisClient->RegisterPacketHandler(Full_State, this);
-//	thisClient->RegisterPacketHandler(Player_Connected, this);
-//	thisClient->RegisterPacketHandler(Player_Disconnected, this);
-//
-//	StartLevel();
-//}
-
 void TestPacketReceiver::ReceivePacket(int type, GamePacket* payload, int source) {
-	std::cout << "Received packet of type: " << type << " from source: " << source << std::endl;
+	if (type < 0) {
+		std::cerr << "Invalid packet type received: " << type << std::endl;
+		return;
+	}
+
+	std::cout << "Received packet of type: " << type << " from source: " << source << " Size: " << payload->size << std::endl;
 	if (type == String_Message) {
 		StringPacket* realPacket = (StringPacket*)payload;
 
@@ -157,8 +142,6 @@ void TestPacketReceiver::ReceivePacket(int type, GamePacket* payload, int source
 			std::cerr << "Player ID " << source << " not found in playerPeerMap!" << std::endl;
 		}
 	}
-<<<<<<< HEAD
-=======
 
 	if (type == Full_State) {
 		FullPacket* fullPacket = (FullPacket*)payload;
@@ -173,15 +156,15 @@ void TestPacketReceiver::ReceivePacket(int type, GamePacket* payload, int source
 		if (objectIter != game->networkObjects.end()) {
 			NetworkObject* networkObject = objectIter->second;
 
-			// Apply the full state to the network object
-			networkObject->ReadFullPacket(*fullPacket);
-
 			std::cout << "Updated Object ID " << objectID
 				<< " to Position: " << fullState.position.x << ", "
 				<< fullState.position.y << ", " << fullState.position.z
 				<< " and Orientation: " << fullState.orientation.x << ", "
 				<< fullState.orientation.y << ", " << fullState.orientation.z
 				<< ", " << fullState.orientation.w << std::endl;
+
+			// Apply the full state to the network object
+			networkObject->ReadFullPacket(*fullPacket);
 		}
 		else {
 			std::cerr << "Object ID " << objectID << " not found in networkObjects!" << std::endl;
@@ -216,7 +199,6 @@ void TestPacketReceiver::ReceivePacket(int type, GamePacket* payload, int source
 			std::cerr << "Object ID " << objectID << " not found in networkObjects!" << std::endl;
 		}
 	}
->>>>>>> 274d4918607564da067c4c81018e1de8c4d5e892
 }
 
 void NetworkedGame::UpdateGame(float dt) {
@@ -226,6 +208,7 @@ void NetworkedGame::UpdateGame(float dt) {
 			UpdateAsServer(dt);
 		}
 		else if (client) {
+			std::cout << "Client is updating... please wait" << std::endl;
 			UpdateAsClient(dt);
 		}
 		timeToNextPacket += 1.0f / 20.0f; //20hz server/client update
@@ -250,18 +233,28 @@ void NetworkedGame::UpdateGame(float dt) {
 		angryGoose->Update(dt);
 	}
 
+	/*if (kitten1) {
+		kitten1->Update(dt);
+	}*/
+
+	if (!player) {
+		SpawnPlayer(Vector3(0, 2, -30), "player");
+	}
+
 	TutorialGame::UpdateGame(dt);
 }
 
 void NetworkedGame::UpdateAsServer(float dt) {
 	packetsToSnapshot--;
 	for (auto& [playerID, player] : playerPeerMap) {
-		NetworkObject* networkObj = player->GetNetworkObject();
-		if (networkObj) {
-			GamePacket* newPacket = nullptr;
-			if (networkObj->WritePacket(&newPacket, packetsToSnapshot < 0, 0)) {
-				server->SendPacket(*newPacket, playerID);
-				delete newPacket;
+		if (player->controllerByServer) {
+			NetworkObject* networkObj = player->GetNetworkObject();
+			if (networkObj) {
+				GamePacket* newPacket = nullptr;
+				if (networkObj->WritePacket(&newPacket, packetsToSnapshot < 0, 0)) {
+					server->SendPacket(*newPacket, playerID);
+					delete newPacket;
+				}
 			}
 		}
 	}
@@ -275,27 +268,20 @@ void NetworkedGame::UpdateAsServer(float dt) {
 }
 
 void NetworkedGame::UpdateAsClient(float dt) {
-	if (!client) return;
-
-	// Update player inputs and send them to the server
-	ClientPacket newPacket;
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::SPACE)) {
-		newPacket.buttonstates[0] = 1;
+	if (!client) {
+		std::cout << "Client is not initialized!" << std::endl;
+		return;
 	}
-	client->SendPacket(newPacket);
-	client->UpdateClient();
 
-	// Process incoming packets and apply updates to game objects
-	//for (auto& [playerID, player] : playerPeerMap) {
-	//	NetworkObject* networkObj = player->GetNetworkObject();
-	//	if (networkObj) {
-	//		GamePacket* packet = nullptr;
-	//		while (thisClient->GetPacket(*packet)) {
-	//			networkObj->ReadPacket(*packet);
-	//			delete packet;
-	//		}
-	//	}
-	//}
+	if (!player2->controllerByServer) {
+		// Update player inputs and send them to the server
+		ClientPacket newPacket;
+		if (Window::GetKeyboard()->KeyPressed(KeyCodes::SPACE)) {
+			newPacket.buttonstates[0] = 1;
+		}
+		client->SendPacket(newPacket);
+	}
+	client->UpdateClient();
 }
 
 void NetworkedGame::BroadcastSnapshot(bool deltaFrame) {
@@ -407,27 +393,52 @@ void NetworkedGame::AddMazeToWorld() {
 	}
 }
 
-GameObject* NetworkedGame::SpawnPlayer(Vector3 playerSpawnPosition) {
+void NetworkedGame::AddDoorPuzzle()
+{	
+	for (int z = -60; z <= -12; z += 6) {
+		AddCubeToWorld(Vector3(-130, 2, z), Vector3(3, 3, 3), 0);
+		AddCubeToWorld(Vector3(-90, 2, z), Vector3(3, 3, 3), 0);
+		AddCubeToWorld(Vector3(-130, 8, z), Vector3(3, 3, 3), 0);
+		AddCubeToWorld(Vector3(-90, 8, z), Vector3(3, 3, 3), 0);
+	}
 
-	return AddPlayerToWorld(playerSpawnPosition);
+	for (int x = -130; x <= -90; x += 6) {
+		AddCubeToWorld(Vector3(x, 2, -60), Vector3(3, 3, 3), 0);
+		AddCubeToWorld(Vector3(x, 8, -60), Vector3(3, 3, 3), 0);
+	}
+
+	// Add ceiling at y = 14
+	for (int z = -63; z <= -15; z += 6) {
+		for (int x = -130; x <= -90; x += 6) {
+			AddCubeToWorld(Vector3(x + 2, 14, z), Vector3(3, 3, 3), 0);
+		}
+	}
+
+}
+
+NetworkPlayer* NetworkedGame::SpawnPlayer(Vector3 playerSpawnPosition, std::string playerName) {
+
+	return AddPlayerToWorld(playerSpawnPosition, playerName);
 }
 
 void NetworkedGame::StartLevel() {
 	world->ClearAndErase();
 	physics->Clear();
+	networkObjects.clear();
 
 	AddFloorToWorld(Vector3(0, -2, 0));
-
 	AddFlyingStairs();
 
+	AddDoorPuzzle();
+
 	bonus1 = AddBonusToWorld(Vector3(-30, 2, 0));
-
 	bonus2 = AddBonusToWorld(Vector3(-50, 60.5, 55));
-
 	AddMazeToWorld();
 
-	player = SpawnPlayer(Vector3(0, 2, -30));
-	player2 = SpawnPlayer(Vector3(0, 2, -60));
+	//kitten1 = AddKittensToWorld(Vector3(20, 2, -30));
+
+	player = SpawnPlayer(Vector3(0, 2, -30), "player");
+	player2 = SpawnPlayer(Vector3(0, 2, -60), "player2");
 
 	// local player
 	NetworkObject* networkObj = new NetworkObject(*player, 1);
@@ -437,6 +448,20 @@ void NetworkedGame::StartLevel() {
 	NetworkObject* networkObj2 = new NetworkObject(*player2, 2);
 	player2->SetNetworkObject(networkObj2);
 	networkObjects.insert(std::make_pair(2, networkObj2));
+
+	BridgeConstraintTest();
+
+	AddDoorPuzzle();
+
+	AddDoorToWorld(Vector3(-110, 2, -10));
+
+	if (server) {
+		player->controllerByServer = true; // Server controller by player
+	}
+
+	if (client) {
+		player2->controllerByServer = false; // Client controller by player2
+	}
 
 	SetupEnemyPath();
 }
@@ -457,14 +482,21 @@ void NetworkedGame::OnPlayerCollision(NetworkPlayer* a, NetworkPlayer* b) {
 
 void NetworkedGame::OnPlayerConnected(int playerID) {
 	std::cout << "This is player ID: " << playerID << " connected!" << std::endl;
-	NetworkPlayer* newPlayer = new NetworkPlayer(this, playerID);
+	newPlayer = new NetworkPlayer();
 
-	world->AddGameObject(newPlayer); // Add the new player to the game world
-	
-	// Add the new player to the player-peer map
+	if (playerPeerMap.empty()) {
+		// First connection is player
+		newPlayer = player;
+		player->controllerByServer = true;
+	}
+	else {
+		// Second connection is player2
+		newPlayer = player2;
+		player2->controllerByServer = false;
+	}
+
+	world->AddGameObject(newPlayer);
 	playerPeerMap[playerID] = newPlayer;
-	std::cout << "PlayerPeerMap: " << &playerPeerMap[playerID] << std::endl;
-
 	std::cout << "Player " << playerID << " connected!" << std::endl;
 }
 
@@ -576,3 +608,23 @@ void NetworkedGame::TestBehaviourTree() {
 
 	std::cout << "All done!" << std::endl;
 }
+
+//void NetworkedGame::StartAsServer() {
+//	thisServer = new GameServer(NetworkBase::GetDefaultPort(), 4);
+//
+//	thisServer->RegisterPacketHandler(Received_State, this);
+//
+//	StartLevel();
+//}
+//
+//void NetworkedGame::StartAsClient(char a, char b, char c, char d) {
+//	thisClient = new GameClient();
+//	thisClient->Connect(a, b, c, d, NetworkBase::GetDefaultPort());
+//
+//	thisClient->RegisterPacketHandler(Delta_State, this);
+//	thisClient->RegisterPacketHandler(Full_State, this);
+//	thisClient->RegisterPacketHandler(Player_Connected, this);
+//	thisClient->RegisterPacketHandler(Player_Disconnected, this);
+//
+//	StartLevel();
+//}

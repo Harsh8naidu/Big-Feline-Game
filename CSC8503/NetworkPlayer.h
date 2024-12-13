@@ -20,8 +20,12 @@ namespace NCL {
 
 		class NetworkPlayer : public GameObject {
 		public:
-			NetworkPlayer(NetworkedGame* game, int num);
+			bool controllerByServer;
+
+			NetworkPlayer(std::string playerName);
 			~NetworkPlayer();
+
+			NetworkPlayer() : controllerByServer(false) {}
 
 			void OnCollisionBegin(GameObject* otherObject) override;
 

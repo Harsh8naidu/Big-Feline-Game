@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <iostream>
 
 struct _ENetHost;
 struct _ENetPeer;
@@ -51,9 +52,13 @@ struct StringPacket : public GamePacket {
 
 	StringPacket(const std::string& message) {
 		type = BasicNetworkMessages::String_Message;
-		size = (short)message.length();
+		size = sizeof(StringPacket) - sizeof(GamePacket);
 		
-		memcpy(stringData, message.data(), size);
+		if (message.length() >= 256)
+			memcpy(stringData, message.data(), message.length());
+		else
+			std::cout << "String too long for packet!" << std::endl;
+		//memcpy(stringData, message.data(), size);
 	}
 
 	std::string GetStringFromData() {
@@ -71,7 +76,8 @@ struct ClientConnectedPacket : public GamePacket {
 	ClientConnectedPacket(int id) {
 		type = BasicNetworkMessages::Client_Connected;
 		clientID = id;
-		size = sizeof(int);
+		//size = sizeof(int);
+		size = sizeof(ClientConnectedPacket) - sizeof(GamePacket);
 	}
 };
 
@@ -80,16 +86,19 @@ struct ClientDisconnectedPacket : public GamePacket {
 
 	ClientDisconnectedPacket() {
 		type = Client_Disconnected;
-		size = sizeof(ClientDisconnectedPacket);
+		//size = sizeof(ClientDisconnectedPacket);
+		size = sizeof(ClientDisconnectedPacket) - sizeof(GamePacket);
 	}
 };
 
 struct ServerConnectedPacket : public GamePacket {
 	int serverID;
 
-	ServerConnectedPacket() {
+	ServerConnectedPacket(int id) {
 		type = Server_Connected;
-		size = sizeof(ServerConnectedPacket);
+		serverID = id;
+		//size = sizeof(ServerConnectedPacket);
+		size = sizeof(ServerConnectedPacket) - sizeof(GamePacket);
 	}
 };
 

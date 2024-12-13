@@ -4,9 +4,12 @@ using namespace NCL;
 using namespace CSC8503;
 
 NetworkObject::NetworkObject(GameObject& o, int id)
-	: object(o), networkID(id), deltaErrors(0), fullErrors(0) {}
+	: object(o), networkID(id), deltaErrors(0), fullErrors(0) {
+	std::cout << "Creating network object " << networkID << std::endl;
+}
 
 NetworkObject::~NetworkObject()	{
+	std::cout << "Deleting network object " << networkID << std::endl;
 }
 
 bool NetworkObject::ReadPacket(GamePacket& p) {
@@ -102,6 +105,9 @@ bool NetworkObject::WriteFullPacket(GamePacket**p) {
 	fp->fullState.position = object.GetTransform().GetPosition();
 	fp->fullState.orientation = object.GetTransform().GetOrientation();
 	fp->fullState.stateID = lastFullState.stateID++;
+	std::cout << "Writing full packet for object " << networkID
+		<< "pos" << fp->fullState.position.x << "," << fp->fullState.position.y << "," << fp->fullState.position.z
+		<< "or" << fp->fullState.orientation.x << "," << fp->fullState.orientation.y << "," << fp->fullState.orientation.z << "," << fp->fullState.orientation.w << std::endl;
 	*p = fp;
 	return true;
 }

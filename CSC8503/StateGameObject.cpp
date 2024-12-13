@@ -4,6 +4,8 @@
 #include "State.h"
 #include "PhysicsObject.h"
 #include <GameWorld.h>
+#include "NetworkPlayer.h"
+#include "Window.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -67,7 +69,7 @@ void StateGameObject::MoveToWaypoint(float dt) {
 		if (movingForward) {
 			waypointIndex++;
 			if (waypointIndex >= waypoints.size()) {
-				movingForward = false; // Reverse direction
+				movingForward = false; // Reverse directionas
 				waypointIndex = waypoints.size() - 2; // Go back one step
 			}
 		}
@@ -94,33 +96,53 @@ void StateGameObject::ChasePlayer(float dt) {
 	Vector3 direction = playerPos - currentPos;
 	Vector::Normalise(direction);
 
-	GetPhysicsObject()->AddForce(direction * 80.0f); // Faster speed when chasing
+	GetPhysicsObject()->AddForce(direction * 5.0f); // Faster speed when chasing
 }
 
 bool StateGameObject::DetectPlayer() {
-	
-
 	if (!player || !gameWorld) return false;
 
 	Vector3 currentPos = GetTransform().GetPosition();
 	Vector3 playerPos = player->GetTransform().GetPosition();
 	Vector3 direction = playerPos - currentPos;
 
+	float distance = Vector::Length(direction); // Calculate the distance between the objects
+	float detectionRange = 10.0f; // Adjust this value to set the detection range
+
+	if (distance > detectionRange) { // Check if the player is too far
+		return false;
+	}
+
 	Ray ray(currentPos, Vector::Normalise(direction));
 	RayCollision collision;
 
 	// Check if the ray hits the player
 	if (gameWorld->Raycast(ray, collision, true)) {
-		
 		if (collision.node == player) {
-			std::cout << "Detecting player" << std::endl;
 			Debug::DrawLine(currentPos, playerPos, Vector4(1, 0, 0, 1)); // Debugging line to visualize the ray
-			player->SetActive(false); // Deactivate the player
+
+			static float elapsedTime = 0.0f;
+			float dt = Window::GetWindow()->GetTimer().GetTimeDeltaSeconds();
+
+			if (player->IsActive()) {
+				player->SetActive(false); // Deactivate the player
+				elapsedTime = 0.0f;       // Reset the timer
+			}
+			else if (!player->IsActive()) {
+				elapsedTime += dt;
+				std::cout << "Player detected! " << elapsedTime << std::endl;
+				if (elapsedTime >= 0.8f) { // Check if 5 seconds have passed
+					player->GetTransform().SetPosition(Vector3(0, 2, -30)); // Reset the player position
+					player->SetActive(true); // Activate the player
+					elapsedTime = 0.0f;      // Reset the timer for future use
+				}
+			}
 			return true;
 		}
 	}
 	return false;
 }
+
 
 void StateGameObject::Idle(float dt) {
 	// Optional idle behavior, not interested in this for now
