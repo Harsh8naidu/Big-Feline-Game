@@ -40,6 +40,8 @@ namespace NCL {
 
 			void ImpulseResolveCollision(GameObject& a , GameObject&b, CollisionDetection::ContactPoint& p) const;
 
+			void ResolveSpringCollision(GameObject& a, GameObject& b, float springCoefficient, float restLength) const;
+
 			GameWorld& gameWorld;
 
 			bool	applyGravity;

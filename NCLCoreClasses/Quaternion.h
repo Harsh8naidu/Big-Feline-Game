@@ -35,7 +35,6 @@ namespace NCL::Maths {
 		void		Normalise(); 
 		Quaternion	Normalised() const;
 
-			
 		static float Dot(const Quaternion &a, const Quaternion &b);
 
 		static Quaternion	Lerp(const Quaternion &from, const Quaternion &to, float by);
@@ -47,6 +46,13 @@ namespace NCL::Maths {
 
 		static Quaternion EulerAnglesToQuaternion(float pitch, float yaw, float roll);
 		static Quaternion AxisAngleToQuaterion(const Vector3& vector, float degrees);
+
+		Matrix3		ToMatrix3() const;
+
+		// Identity method
+		static Quaternion Identity() {
+			return Quaternion(0.0f, 0.0f, 0.0f, 1.0f); // Identity quaternion: (x, y, z, w) = (0, 0, 0, 1)
+		}
 
 		inline bool  operator ==(const Quaternion &from)	const {
 			if (x != from.x || y != from.y || z != from.z || w != from.w) {

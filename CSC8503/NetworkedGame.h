@@ -39,6 +39,8 @@ namespace NCL {
 			void AddMazeToWorld();
 			void AddDoorPuzzle();
 
+			void AddCubesAroundSphere();
+
 			void TestPathfinding();
 			void DisplayPathfinding();
 
@@ -85,7 +87,7 @@ namespace NCL {
 
 			NetworkPlayer* newPlayer = nullptr;
 
-			int score = 0;
+			
 		};
 
 		class TestPacketReceiver : public PacketReceiver {

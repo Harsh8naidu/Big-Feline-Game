@@ -6,6 +6,7 @@
 #include <GameWorld.h>
 #include "NetworkPlayer.h"
 #include "Window.h"
+#include "TutorialGame.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -139,6 +140,7 @@ bool StateGameObject::DetectPlayer() {
 			}
 			return true;
 		}
+
 	}
 	return false;
 }

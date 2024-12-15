@@ -337,5 +337,22 @@ namespace NCL::Maths {
             }
             return Length(diff);
         }
+
+        template <typename T>
+        VectorTemplate<T, 3> ClosestPointOnLineSegment(const VectorTemplate<T, 3>& point, const VectorTemplate<T, 3>& start, const VectorTemplate<T, 3>& end) {
+            VectorTemplate<T, 3> line = end - start;
+            T lineLengthSquared = LengthSquared(line);
+
+            if (lineLengthSquared == 0.0f) {
+                // Line segment is a single point
+                return start;
+            }
+
+            // Project the point onto the line segment, clamping to [0,1] to stay within the segment
+            T t = Dot(point - start, line) / lineLengthSquared;
+            t = std::clamp(t, T(0.0), T(1.0));
+
+            return start + line * t;
+        }
     }
 }

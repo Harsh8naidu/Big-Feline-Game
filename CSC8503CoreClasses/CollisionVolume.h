@@ -7,7 +7,8 @@ namespace NCL {
 		Mesh	= 8,
 		Capsule = 16,
 		Compound= 32,
-		Invalid = 256
+		Invalid = 256,
+		Plane = 512
 	};
 
 	class CollisionVolume

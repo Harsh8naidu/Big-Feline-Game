@@ -212,6 +212,10 @@ void PhysicsSystem::BasicCollisionDetection() {
 				info.framesLeft = numCollisionFrames;
 				allCollisions.insert(info);
 			}
+			if ((*i)->GetName() == "sphere") {
+				//ResolveSpringCollision(*(*i), *(*j), 100.0f, 10.0f);
+				ResolveSpringCollision(*(*i), *(*j), 0.001f, 0.001f);
+			}
 		}
 	}
 	
@@ -236,6 +240,7 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 		return; // Infinite mass/ two static objects
 	}
 
+	// Projection method used here
 	// Separate them out using projection
 	transformA.SetPosition(transformA.GetPosition() - p.normal * p.penetration * (physA->GetInverseMass() / totalMass));
 
@@ -260,7 +265,10 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	Vector3 inertiaB = Vector::Cross(physB->GetInertiaTensor() * Vector::Cross(relativeB, p.normal), relativeB);
 	float angularEffect = Vector::Dot(inertiaA + inertiaB, p.normal);
 
-	float cRestitution = 0.66f; // disperse some kinetic energy
+	// hard coded restitution from the tutorial
+	//float cRestitution = 0.66f; // disperse some kinetic energy
+
+	float cRestitution = physA->GetElasticity() * physB->GetElasticity();
 
 	float j = (-(1.0f + cRestitution) * impulseForce) / (totalMass + angularEffect);
 
@@ -272,6 +280,27 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 	physA->ApplyAngularImpulse(Vector::Cross(relativeA, -fullImpulse));
 	physB->ApplyAngularImpulse(Vector::Cross(relativeB, fullImpulse));
 }
+
+/* Collision Resolution using Spring method*/
+void PhysicsSystem::ResolveSpringCollision(GameObject& a, GameObject& b, float springCoefficient, float restLength) const {
+	PhysicsObject* physA = a.GetPhysicsObject();
+	PhysicsObject* physB = b.GetPhysicsObject();
+
+	Vector3 posA = a.GetTransform().GetPosition();
+	Vector3 posB = b.GetTransform().GetPosition();
+
+	Vector3 springVector = posB - posA;
+	float currentLength = Vector::Length(springVector);
+
+	// Calculate spring force using Hooke's Law
+	float displacement = currentLength - restLength;
+	Vector3 springForce = Vector::Normalise(-springVector) * (springCoefficient * displacement);
+
+	// Apply forces to objects
+	physA->AddForce(-springForce);
+	physB->AddForce(springForce);
+}
+
 
 /*
 

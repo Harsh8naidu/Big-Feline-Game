@@ -17,6 +17,11 @@ PhysicsObject::~PhysicsObject()	{
 
 }
 
+void PhysicsObject::SetElasticity(float newElasticity) {
+	elasticity = newElasticity;
+}
+
+
 void PhysicsObject::ApplyAngularImpulse(const Vector3& force) {
 	angularVelocity += inverseInteriaTensor * force;
 }
@@ -75,6 +80,28 @@ void PhysicsObject::InitHollowSphereInertia() {
 
 	// Since it's a hollow sphere, the inertia tensor is uniform
 	inverseInertia = Vector3(i, i, i);
+}
+
+void PhysicsObject::InitCapsuleInertia() {
+	float radius = transform->GetScale().x; // Assuming uniform scaling for radius
+	float halfHeight = transform->GetScale().y; // Half the height of the cylindrical part
+
+	float cylinderMass = inverseMass * (halfHeight / (halfHeight + (4.0f / 3.0f) * radius));
+	float sphereMass = inverseMass - cylinderMass; // Remaining mass for the hemispheres
+
+	// Cylinder inertia components
+	float cylinderIxx = (1.0f / 12.0f) * cylinderMass * (3 * radius * radius + 4 * halfHeight * halfHeight);
+	float cylinderIyy = (0.5f) * cylinderMass * radius * radius;
+	float cylinderIzz = cylinderIxx;
+
+	// Sphere inertia components (treating as a full sphere, then halving)
+	float sphereI = (2.0f / 5.0f) * sphereMass * radius * radius; // Full sphere inertia
+	sphereI *= 0.5f; // Half for hemispheres
+
+	// Combine contributions from cylinder and hemispheres
+	inverseInertia.x = 1.0f / (cylinderIxx + sphereI);
+	inverseInertia.y = 1.0f / (cylinderIyy + sphereI);
+	inverseInertia.z = 1.0f / (cylinderIzz + sphereI);
 }
 
 

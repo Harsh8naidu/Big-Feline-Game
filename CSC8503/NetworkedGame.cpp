@@ -30,10 +30,10 @@ NetworkedGame::NetworkedGame(bool isServer)	{
 	timeToNextPacket  = 0.0f;
 	packetsToSnapshot = 0;
 	std::cout << "NetworkedGame Created!" << std::endl;
-	//StartLevel();
+	StartLevel();
 	TestPathfinding();
 
-	// Needs to be part of NetworkedGame class, not local to constructor
+	// Needs to be part of NetworkedGame class
 	clientReceiver = new TestPacketReceiver("Client");
 	clientReceiver->game = this;
 	serverReceiver = new TestPacketReceiver("Server");
@@ -208,7 +208,6 @@ void NetworkedGame::UpdateGame(float dt) {
 			UpdateAsServer(dt);
 		}
 		else if (client) {
-			std::cout << "Client is updating... please wait" << std::endl;
 			UpdateAsClient(dt);
 		}
 		timeToNextPacket += 1.0f / 20.0f; //20hz server/client update
@@ -217,18 +216,18 @@ void NetworkedGame::UpdateGame(float dt) {
 	DisplayPathfinding();
 
 	if (client) {
-		Debug::Print("This is Client Player", Vector2(5, 10), Debug::MAGENTA);
+		Debug::Print("This is Client Player", Vector2(2, 15), Debug::MAGENTA);
 		client->UpdateClient();
 	}
 	if (server) {
-		Debug::Print("This is Server Player", Vector2(5, 10), Debug::MAGENTA);
+		Debug::Print("This is Server Player", Vector2(2, 15), Debug::MAGENTA);
 		server->UpdateServer();
 	}
 
-	score = player->GetScore();
+	
 
-	Debug::Print("Score: " + std::to_string(score), Vector2(75, 15), Debug::GREEN);
 
+	
 	if (angryGoose) {
 		angryGoose->Update(dt);
 	}
@@ -389,6 +388,7 @@ void NetworkedGame::AddMazeToWorld() {
 	const auto& wallPositions = game->GetWallPositions();
 
 	for (const Vector3& pos : wallPositions) {
+		Debug::DrawLine(pos, pos + Vector3(0, 10, 0), Vector4(1, 0, 0, 1));
 		AddCubeToWorld(pos, cubeSize, 0);
 	}
 }
@@ -413,8 +413,34 @@ void NetworkedGame::AddDoorPuzzle()
 			AddCubeToWorld(Vector3(x + 2, 14, z), Vector3(3, 3, 3), 0);
 		}
 	}
-
 }
+
+void NetworkedGame::AddCubesAroundSphere() {
+	Vector3 spherePosition(-60, 10, -80); // Sphere's position
+	float sphereRadius = 5.0f;           // Sphere's radius
+	float cubeSize = 3.0f;               // Half-size of the cube (cube dimensions = 4x4x4)
+
+	// Offsets to arrange cubes in a square around the sphere
+	float offset = sphereRadius + cubeSize - 1;
+
+	// Top and bottom layer of cubes around the sphere
+	for (int x = -1; x <= 1; ++x) {
+		for (int z = -1; z <= 1; ++z) {
+			if (x == 0 && z == 0) continue; // Skip the center position
+			AddOBBCubeToWorld(spherePosition + Vector3(x * offset, 10, z * offset * 2), Vector3(cubeSize, cubeSize, cubeSize), 0);
+			//AddOBBCubeToWorld(spherePosition + Vector3(x * offset, -10, z * offset * 2), Vector3(cubeSize, cubeSize, cubeSize), 0);
+		}
+	}
+
+	// Middle layer of cubes around the sphere
+	for (int x = -1; x <= 1; ++x) {
+		for (int z = -1; z <= 1; ++z) {
+			if (x == 0 && z == 0) continue; // Skip the center position
+			AddOBBCubeToWorld(spherePosition + Vector3(x * offset * 1.5, 0, z * offset * 2), Vector3(cubeSize, cubeSize, cubeSize), 0);
+		}
+	}
+}
+
 
 NetworkPlayer* NetworkedGame::SpawnPlayer(Vector3 playerSpawnPosition, std::string playerName) {
 
@@ -433,12 +459,19 @@ void NetworkedGame::StartLevel() {
 
 	bonus1 = AddBonusToWorld(Vector3(-30, 2, 0));
 	bonus2 = AddBonusToWorld(Vector3(-50, 60.5, 55));
+	bonus3 = AddBonusToWorld(Vector3(-130, 61, 60));
+	bonus4 = AddBonusToWorld(Vector3(20, 3, 70));
+	bonus5 = AddBonusToWorld(Vector3(-110, 2, -40));
+	bonus6 = AddBonusToWorld(Vector3(-60, 2, -90));
 	AddMazeToWorld();
 
 	//kitten1 = AddKittensToWorld(Vector3(20, 2, -30));
 
 	player = SpawnPlayer(Vector3(0, 2, -30), "player");
 	player2 = SpawnPlayer(Vector3(0, 2, -60), "player2");
+
+	/*std::cout << "Player 1: " << player << std::endl;
+	std::cout << "Player 2: " << player2 << std::endl;*/
 
 	// local player
 	NetworkObject* networkObj = new NetworkObject(*player, 1);
@@ -453,7 +486,23 @@ void NetworkedGame::StartLevel() {
 
 	AddDoorPuzzle();
 
-	AddDoorToWorld(Vector3(-110, 2, -10));
+	plane = AddBlackObstacleToWorld(Vector3(-110, 50, 30), Vector3(1,1,1), 20);
+	plane2 = AddBlackObstacleToWorld(Vector3(-10, 50, 0), Vector3(1, 1, 1), 20);
+
+	capsule = AddCapsuleToWorld(Vector3(-30, 100, 60), 5, 5, 20);
+
+
+	AddCubeToWorld(Vector3(-30, 2, 20), Vector3(10, 0.4, 10), 0);
+	AddCubeToWorld(Vector3(-30, 2, 20), Vector3(5, 1, 5), 0);
+	AddPlaneToWorld(Vector3(-30, 10, 20), Vector3(2, 2, 2));
+	AddCubeToWorld(Vector3(-30, 20, 20), Vector3(5, 5, 5), 2);
+
+	AddCubeToWorld(Vector3(-30, 2, 60), Vector3(6, 6, 6), 0);
+	AddCubeToWorld(Vector3(-30, 2, 72.5), Vector3(6, 6, 6), 0);
+	AddCubeToWorld(Vector3(-30, 2, 85), Vector3(6, 6, 6), 0);
+
+	AddCubesAroundSphere();
+	AddSphereToWorld(Vector3(-60, 10, -80), 5, 1, true);
 
 	if (server) {
 		player->controllerByServer = true; // Server controller by player
@@ -464,6 +513,7 @@ void NetworkedGame::StartLevel() {
 	}
 
 	SetupEnemyPath();
+	door = AddDoorToWorld(Vector3(-110, 2, -10));
 }
 
 

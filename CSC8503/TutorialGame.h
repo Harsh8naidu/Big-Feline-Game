@@ -34,6 +34,8 @@ namespace NCL {
 
 			StateGameObject* AddAngryGooseToWorld(const Vector3& position, const std::vector<Vector3>& path, GameObject* player, GameWorld* world);
 
+			
+
 		protected:
 			void InitialiseAssets();
 
@@ -42,7 +44,7 @@ namespace NCL {
 
 			void InitWorld();
 
-			GameObject* AddDoorToWorld(const Vector3& position);
+			
 
 			/*
 			These are some of the world/object creation functions I created when testing the functionality
@@ -65,6 +67,8 @@ namespace NCL {
 			GameObject* AddFloorToWorld(const Vector3& position);
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f, bool isHollow = true);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
+
+			GameObject* AddOBBCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass);
 
 			
 
@@ -106,11 +110,19 @@ namespace NCL {
 
 			Texture* catTex = nullptr;
 
+			Texture* planeTex = nullptr;
+
+			Texture* capsuleTex = nullptr;
+
+			Texture* bonusTex = nullptr;
+
 			//Coursework Meshes
 			Mesh*	catMesh		= nullptr;
 			Mesh*	kittenMesh	= nullptr;
 			Mesh*	enemyMesh	= nullptr;
 			Mesh*	bonusMesh	= nullptr;
+
+			Mesh* planeMesh = nullptr;
 
 			//Coursework Additional functionality	
 			GameObject* lockedObject	= nullptr;
@@ -127,6 +139,23 @@ namespace NCL {
 
 			GameObject* bonus1 = nullptr;
 			GameObject* bonus2 = nullptr;
+			GameObject* bonus3 = nullptr;
+			GameObject* bonus4 = nullptr;
+			GameObject* bonus5 = nullptr;
+			GameObject* bonus6 = nullptr;
+
+			GameObject* capsule = nullptr;
+			
+
+			GameObject* plane = nullptr;
+			GameObject* plane2 = nullptr;
+			GameObject* door = nullptr;
+			GameObject* AddDoorToWorld(const Vector3& position);
+			GameObject* AddBlackObstacleToWorld(const Vector3& position, Vector3 dimensions, float inverseMass);
+
+			GameObject* AddPlaneToWorld(const Vector3& position, const Vector3& scale);
+
+			GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass);
 
 			//KittenStateObject* kitten1 = nullptr;
 
@@ -141,6 +170,13 @@ namespace NCL {
 
 			Vector3 lockedAngle = Vector3(0, 0, 0);
 
+			bool isGameStart = false;
+			bool isGamePaused = false;
+
+			float gameTimer = 0.0f; // Track elapsed time
+			bool isGameEnd = false;
+
+			int score = 0;
 		};
 	}
 }

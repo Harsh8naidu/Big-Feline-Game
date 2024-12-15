@@ -73,6 +73,10 @@ namespace NCL::CSC8503 {
 			isActive = active;
 		}
 
+		bool GetActive() {
+			return isActive;
+		}
+
 		const std::string& GetName() const {
 			return name;
 		}
@@ -80,6 +84,8 @@ namespace NCL::CSC8503 {
 		int GetScore() const {
 			return score;
 		}
+
+		void SetDoorOpen(bool state);
 
 		void SetCollected(bool state) { collected = state; }
 		bool IsCollected() const { return collected; }
@@ -105,10 +111,21 @@ namespace NCL::CSC8503 {
 					std::cout << "Score: " << ++score << std::endl;
 				}
 			}
+
+			if (name == "player" && otherObject->GetName() == "plane") {
+				std::cout << "player has hit the plane" << std::endl;
+				isDoorOpen = true;
+			}
+
+			if (name == "bonus" && otherObject->GetName() == "") {
+				/*this->SetActive(false);
+				isEnemyCollectedBonus = true;*/
+			}
 		}
 
 		virtual void OnCollisionEnd(GameObject* otherObject) {
 			//std::cout << "OnCollisionEnd event occured!\n";
+			
 		}
 
 		bool GetBroadphaseAABB(Vector3&outsize) const;
@@ -142,6 +159,9 @@ namespace NCL::CSC8503 {
 		int layer;
 		int score;
 		bool collected = false;
+
+		bool isDoorOpen;
+		bool isEnemyCollectedBonus;
 	};
 }
 

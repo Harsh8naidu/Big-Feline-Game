@@ -223,3 +223,31 @@ Vector3		Quaternion::operator *(const Vector3 &a)	const {
 	Quaternion newVec = *this * Quaternion(a.x, a.y, a.z, 0.0f) * Conjugate();
 	return Vector3(newVec.x, newVec.y, newVec.z);
 }
+
+Matrix3 Quaternion::ToMatrix3() const {
+	Matrix3 mat;
+
+	float xx = x * x;
+	float yy = y * y;
+	float zz = z * z;
+	float xy = x * y;
+	float xz = x * z;
+	float yz = y * z;
+	float wx = w * x;
+	float wy = w * y;
+	float wz = w * z;
+
+	mat.array[0][0] = 1 - 2 * (yy + zz);
+	mat.array[0][1] = 2 * (xy + wz);
+	mat.array[0][2] = 2 * (xz - wy);
+
+	mat.array[1][0] = 2 * (xy - wz);
+	mat.array[1][1] = 1 - 2 * (xx + zz);
+	mat.array[1][2] = 2 * (yz + wx);
+
+	mat.array[2][0] = 2 * (xz + wy);
+	mat.array[2][1] = 2 * (yz - wx);
+	mat.array[2][2] = 1 - 2 * (xx + yy);
+
+	return mat;
+}

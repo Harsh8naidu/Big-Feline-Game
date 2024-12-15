@@ -88,6 +88,10 @@ namespace NCL {
 
 		static bool	AABBTest(const Vector3& posA, const Vector3& posB, const Vector3& halfSizeA, const Vector3& halfSizeB);
 
+		static bool PlaneSphereIntersection(const Plane& plane, const SphereVolume& volume, const Transform& worldTransform, CollisionInfo& collisionInfo);
+
+		static bool PlaneAABBIntersection(const Plane& plane, const AABBVolume& volume, const Transform& worldTransform, CollisionInfo& collisionInfo);
+
 
 		static bool ObjectIntersection(GameObject* a, GameObject* b, CollisionInfo& collisionInfo);
 

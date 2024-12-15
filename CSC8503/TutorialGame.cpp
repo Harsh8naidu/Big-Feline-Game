@@ -56,14 +56,23 @@ void TutorialGame::InitialiseAssets() {
 	catMesh		= renderer->LoadMesh("ORIGAMI_Chat.msh");
 	kittenMesh	= renderer->LoadMesh("Kitten.msh");
 
-	enemyMesh	= renderer->LoadMesh("Keeper.msh");
+	//enemyMesh	= renderer->LoadMesh("Keeper.msh");
+	enemyMesh = renderer->LoadMesh("goose.msh");
 	bonusMesh	= renderer->LoadMesh("19463_Kitten_Head_v1.msh");
-	capsuleMesh = renderer->LoadMesh("capsule.msh");
+	capsuleMesh = renderer->LoadMesh("Capsule.msh");
+
+	planeMesh = renderer->LoadMesh("Plane.msh");
 
 	basicTex	= renderer->LoadTexture("checkerboard.png");
 	basicShader = renderer->LoadShader("scene.vert", "scene.frag");
 
 	catTex = renderer->LoadTexture("GoatBeige.png");
+
+	planeTex = renderer->LoadTexture("GoatBlack.png");
+	capsuleTex = renderer->LoadTexture("Default.png");
+
+	bonusTex = renderer->LoadTexture("goldtex.png");
+
 
 	InitCamera();
 	//InitWorld(); //This is now done in the network tutorial to allow for server/client selection
@@ -76,10 +85,16 @@ TutorialGame::~TutorialGame()	{
 	delete kittenMesh;
 	delete enemyMesh;
 	delete bonusMesh;
+	delete capsuleMesh;
+	delete planeMesh;
 
 	delete basicTex;
 	delete basicShader;
 	delete catTex;
+	delete planeTex;
+	delete capsuleTex;
+
+	delete bonusTex;
 
 	delete physics;
 	delete renderer;
@@ -87,6 +102,16 @@ TutorialGame::~TutorialGame()	{
 }
 
 void TutorialGame::UpdateGame(float dt) {
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::P)) {
+		// Pause the game
+		isGamePaused = !isGamePaused;
+	}
+
+	if (isGamePaused) {
+		Debug::Print("Game Paused", Vector2(40, 50), Debug::RED);
+		return;
+	}
+
 	if (!inSelectionMode) {
 		world->GetMainCamera().UpdateCamera(dt);
 	}
@@ -94,13 +119,68 @@ void TutorialGame::UpdateGame(float dt) {
 	if (lockedObject == nullptr && isCameraLocked) {
 		lockedObject = (GameObject*)player; // lock the camera to the player
 		selectionObject = lockedObject;
+		
 	}
 	
 	if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::C)) {
-		std::cout << "Camera unlocked" << std::endl;
+		
 		lockedObject = nullptr; // release the camera from the player
 		isCameraLocked = !isCameraLocked;
+		isGameStart = true;
+		useGravity = true;
+		physics->UseGravity(useGravity);
+
+		// Reset the timer when the game starts
+		gameTimer = 0.0f;
 	}
+	else if (!isGameStart) {
+		Debug::Print("Press C to start the Game", Vector2(25, 30), Debug::CYAN);
+		Debug::Print("Press P to pause the Game", Vector2(25, 40), Debug::CYAN);
+
+		float yPosOfUI = 50;
+		// Controls
+		Debug::Print("Controls", Vector2(25, 45), Debug::YELLOW);
+		Debug::Print("Press W to move forward", Vector2(25, yPosOfUI), Debug::BLUE);
+		Debug::Print("Press S to move backward", Vector2(25, yPosOfUI + 10), Debug::BLUE);
+		Debug::Print("Press A to move left", Vector2(25, yPosOfUI + 20), Debug::BLUE);
+		Debug::Print("Press D to move right", Vector2(25, yPosOfUI + 30), Debug::BLUE);
+		Debug::Print("Press SPACE to jump", Vector2(25, yPosOfUI + 40), Debug::BLUE);
+
+		if (isGameEnd) {
+			Debug::Print("Game Over", Vector2(45, 10), Debug::RED);
+		}
+	}
+	//Debug::Print("Game Over", Vector2(45, 10), Debug::RED);
+
+	score = player->GetScore();
+
+	Debug::Print("Score: " + std::to_string(score) + "/6", Vector2(75, 15), Debug::GREEN);
+
+	if (isGameEnd) {
+		Debug::Print("High Score: " + std::to_string(score), Vector2(40, 20), Debug::RED);
+	}
+
+	if (isGameStart) {
+		// Update the timer
+		gameTimer += dt;
+
+		// Format and display the timer as minutes:seconds
+		int minutes = static_cast<int>(gameTimer) / 60;
+		int seconds = static_cast<int>(gameTimer) % 60;
+		std::string timerText = "Timer: " + std::to_string(minutes) + ":" + (seconds < 10 ? "0" : "") + std::to_string(seconds) + "/5:00";
+
+		Debug::Print(timerText, Vector2(35, 10), Debug::GREEN);
+
+		// End the game after 5 minutes
+		if (gameTimer >= 300.0f || score == 6) { // 300 seconds = 5 minutes
+
+			// Logic to handle game end (e.g., restart, quit, show end screen)
+			isGameStart = false;
+			gameTimer = 0.0f; // Reset timer
+			isGameEnd = true;
+		}
+	}
+
 	
 
 	if (lockedObject != nullptr) {
@@ -154,8 +234,6 @@ void TutorialGame::UpdateGame(float dt) {
 	else {
 		Debug::Print("(G)ravity off", Vector2(5, 95), Debug::RED);
 	}
-	//This year we can draw debug textures as well!
-	//Debug::DrawTex(*basicTex, Vector2(10, 10), Vector2(5, 5), Debug::MAGENTA);
 
 	RayCollision closestCollision;
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::K) && selectionObject) {
@@ -178,7 +256,7 @@ void TutorialGame::UpdateGame(float dt) {
 		}
 	}
 
-	Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
+	//Debug::DrawLine(Vector3(), Vector3(0, 100, 0), Vector4(1, 0, 0, 1));
 
 	SelectObject();
 	MoveSelectedObject();
@@ -195,6 +273,9 @@ void TutorialGame::UpdateGame(float dt) {
 	}
 
 	bonus1->GameObjectUpdate(dt);
+
+	plane->GameObjectUpdate(dt);
+	door->GameObjectUpdate(dt);
 }
 
 void TutorialGame::UpdateKeys() {
@@ -208,8 +289,8 @@ void TutorialGame::UpdateKeys() {
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
-		useGravity = !useGravity; //Toggle gravity!
-		physics->UseGravity(useGravity);
+		//useGravity = !useGravity; //Toggle gravity!
+		//physics->UseGravity(useGravity);
 	}
 	//Running certain physics updates in a consistent order might cause some
 	//bias in the calculations - the same objects might keep 'winning' the constraint
@@ -330,11 +411,12 @@ void TutorialGame::InitWorld() {
 }
 
 GameObject* TutorialGame::AddDoorToWorld(const Vector3& position) {
-	GameObject* floor = new GameObject();
+	GameObject* floor = new GameObject("door");
 
 	Vector3 doorSize = Vector3(4, 5.5, 0.2f);
-	AABBVolume* volume = new AABBVolume(doorSize);
-	floor->SetBoundingVolume((CollisionVolume*)volume);
+	AABBVolume* volume = new AABBVolume(Vector3(4, 5, 0.2f) * 10.0f);
+	//floor->SetBoundingVolume((CollisionVolume*)volume);
+	
 	floor->GetTransform()
 		.SetScale(doorSize * 6.0f)
 		.SetPosition(position)
@@ -350,7 +432,77 @@ GameObject* TutorialGame::AddDoorToWorld(const Vector3& position) {
 
 	world->AddGameObject(floor);
 
+	//Debug::DrawAxisLines(floor->GetTransform().GetMatrix(), 5.0f, 120.0f);
+
 	return floor;
+}
+
+GameObject* TutorialGame::AddBlackObstacleToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
+	GameObject* cube = new GameObject("plane");
+
+	AABBVolume* volume = new AABBVolume(dimensions);
+	cube->SetBoundingVolume((CollisionVolume*)volume);
+
+	cube->GetTransform()
+		.SetPosition(position)
+		.SetScale(dimensions * 2.0f);
+
+	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, planeTex, basicShader));
+	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
+
+	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
+	cube->GetPhysicsObject()->InitCubeInertia();
+	cube->GetPhysicsObject()->SetElasticity(1.0f); // Different elasticity for the plane
+
+	world->AddGameObject(cube);
+
+	return cube;
+}
+
+GameObject* TutorialGame::AddPlaneToWorld(const Vector3& position, const Vector3& scale) {
+	GameObject* plane = new GameObject();
+
+	Plane* volume = new Plane();
+	plane->SetBoundingVolume((CollisionVolume*)volume);
+
+	plane->GetTransform()
+		.SetPosition(position)
+		.SetOrientation(Quaternion::Identity()) // Plane will stay flat (no rotation)
+		.SetScale(scale);
+
+	plane->SetRenderObject(new RenderObject(&plane->GetTransform(), planeMesh, capsuleTex, basicShader));
+	plane->SetPhysicsObject(new PhysicsObject(&plane->GetTransform(), plane->GetBoundingVolume()));
+	plane->GetPhysicsObject()->SetInverseMass(1);
+	plane->GetPhysicsObject()->SetElasticity(0.7);
+
+	world->AddGameObject(plane);
+
+	return plane;
+}
+
+
+GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass) {
+	GameObject* capsule = new GameObject();
+
+	CapsuleVolume* volume = new CapsuleVolume(halfHeight, radius);
+	capsule->SetBoundingVolume((CollisionVolume*)volume);
+
+	capsule->GetTransform()
+		.SetPosition(position)
+		.SetScale(Vector3(radius * 2, halfHeight * 2, radius * 2));
+
+	capsule->SetRenderObject(new RenderObject(&capsule->GetTransform(), capsuleMesh, capsuleTex, basicShader));
+	capsule->SetPhysicsObject(new PhysicsObject(&capsule->GetTransform(), capsule->GetBoundingVolume()));
+
+	capsule->GetPhysicsObject()->SetInverseMass(inverseMass);
+	capsule->GetPhysicsObject()->InitCapsuleInertia();
+	capsule->GetPhysicsObject()->SetElasticity(0.5f); // Different elasticity for the capsule
+
+	world->AddGameObject(capsule);
+
+	Debug::DrawLine(position, position + Vector3(0, 5, 0), Vector4(1, 0, 0, 1), 120);
+
+	return capsule;
 }
 
 /*
@@ -389,7 +541,7 @@ physics worlds. You'll probably need another function for the creation of OBB cu
 
 */
 GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius, float inverseMass, bool isHollow) {
-	GameObject* sphere = new GameObject();
+	GameObject* sphere = new GameObject("sphere");
 
 	Vector3 sphereSize = Vector3(radius, radius, radius);
 	SphereVolume* volume = new SphereVolume(radius);
@@ -409,7 +561,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 		sphere->GetPhysicsObject()->InitSphereInertia();
 	}
 
-	sphere->GetPhysicsObject()->SetInverseMass(inverseMass);
+	sphere->GetPhysicsObject()->SetInverseMass(30);
 	sphere->GetPhysicsObject()->InitSphereInertia();
 
 	world->AddGameObject(sphere);
@@ -421,6 +573,28 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	GameObject* cube = new GameObject();
 
 	AABBVolume* volume = new AABBVolume(dimensions);
+	cube->SetBoundingVolume((CollisionVolume*)volume);
+
+	cube->GetTransform()
+		.SetPosition(position)
+		.SetScale(dimensions * 2.0f);
+
+	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
+	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
+
+	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
+	cube->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(cube);
+
+	return cube;
+}
+
+GameObject* TutorialGame::AddOBBCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
+	GameObject* cube = new GameObject();
+
+	//AABBVolume* volume = new AABBVolume(dimensions);
+	OBBVolume* volume = new OBBVolume(dimensions);
 	cube->SetBoundingVolume((CollisionVolume*)volume);
 
 	cube->GetTransform()
@@ -560,7 +734,7 @@ GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 		.SetScale(Vector3(2, 2, 2))
 		.SetPosition(position);
 
-	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), bonusMesh, nullptr, basicShader));
+	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), bonusMesh, bonusTex, basicShader));
 	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
 
 	apple->GetPhysicsObject()->SetInverseMass(1.0f);
@@ -573,14 +747,14 @@ GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 
 void TutorialGame::BridgeConstraintTest()
 {
-	Vector3 cubeSize = Vector3(8, 8, 8);
+	Vector3 cubeSize = Vector3(4, 4, 4);
 
-	float invCubeMass = 5; // how heavy the middle pieces are
-	int numLinks = 10; // how many links in the chain
-	float maxDistance = 30; // how far apart the links are
-	float cubeDistance = 20; // how far apart the cubes are
+	float invCubeMass = 1; // how heavy the middle pieces are
+	int numLinks = 5; // how many links in the chain
+	float maxDistance = 13; // how far apart the links are
+	float cubeDistance = 10; // how far apart the cubes are
 
-	Vector3 startPos = Vector3(-90, 100, 0);
+	Vector3 startPos = Vector3(-130, 56, 60);
 
 	GameObject* start = AddCubeToWorld(startPos + Vector3(0, 0, 0), cubeSize, 0); // add the first cube
 	GameObject* end = AddCubeToWorld(startPos + Vector3((numLinks + 2) * cubeDistance, 0, 0), cubeSize, 0); // add the last cube
@@ -595,7 +769,7 @@ void TutorialGame::BridgeConstraintTest()
 		world->AddConstraint(constraint); // add the constraint to the world
 
 		// Draw debug line between the cubes
-		Debug::DrawLine(previous->GetTransform().GetPosition(), block->GetTransform().GetPosition(), Vector4(0, 0, 1, 1), 120);
+		//Debug::DrawLine(previous->GetTransform().GetPosition(), block->GetTransform().GetPosition(), Vector4(0, 0, 1, 1), 120);
 
 		previous = block; // the previous cube is now the new cube
 	}
@@ -603,7 +777,7 @@ void TutorialGame::BridgeConstraintTest()
 	world->AddConstraint(constraint); // add the constraint to the world
 
 	// Draw debug line between the last cube and the end cube
-	Debug::DrawLine(previous->GetTransform().GetPosition(), end->GetTransform().GetPosition(), Vector4(0, 0, 1, 1), 120);
+	//Debug::DrawLine(previous->GetTransform().GetPosition(), end->GetTransform().GetPosition(), Vector4(0, 0, 1, 1), 120);
 }
 
 StateGameObject* TutorialGame::AddStateObjectToWorld(const Vector3& position)
@@ -633,17 +807,23 @@ StateGameObject* TutorialGame::AddAngryGooseToWorld(const Vector3& position, con
 
 	StateGameObject* character = new StateGameObject(path, player, world);
 
-	AABBVolume* volume = new AABBVolume(Vector3(0.5f, 0.9f, 0.5f) * meshSize);
+	//AABBVolume* volume = new AABBVolume(Vector3(0.2f, 0.5f, 0.2f) * meshSize);
+	// SphereVolume worked better for the goose
+	SphereVolume* volume = new SphereVolume(0.5f);
 	character->SetBoundingVolume((CollisionVolume*)volume);
 
 	character->GetTransform()
 		.SetScale(Vector3(meshSize, meshSize, meshSize))
-		.SetPosition(position);
+		.SetPosition(position + Vector3(0, 4, 0));
 
 	character->SetRenderObject(new RenderObject(&character->GetTransform(), enemyMesh, nullptr, basicShader));
 	character->SetPhysicsObject(new PhysicsObject(&character->GetTransform(), character->GetBoundingVolume()));
 
-	character->GetPhysicsObject()->SetInverseMass(inverseMass);
+	character->GetPhysicsObject()->SetLinearDamping(0.2f);
+
+	character->GetPhysicsObject()->SetAngularDamping(0.2f);
+
+	character->GetPhysicsObject()->SetInverseMass(0.1);
 	character->GetPhysicsObject()->InitSphereInertia();
 
 	world->AddGameObject(character);
@@ -720,7 +900,7 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	if (inSelectionMode) {
-		Debug::Print("Press Q to change to camera mode!", Vector2(5, 85));
+		//Debug::Print("Press Q to change to camera mode!", Vector2(5, 85));
 
 		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::Left)) {
 			if (selectionObject) {	//set colour to deselected;
@@ -754,7 +934,7 @@ bool TutorialGame::SelectObject() {
 		}
 	}
 	else {
-		Debug::Print("Press Q to change to select mode!", Vector2(5, 85));
+		//Debug::Print("Press Q to change to select mode!", Vector2(5, 85));
 	}
 	return false;
 }
@@ -767,7 +947,7 @@ line - after the third, they'll be able to twist under torque aswell.
 */
 
 void TutorialGame::MoveSelectedObject() {
-	Debug::Print("Click Force:" + std::to_string(forceMagnitude), Vector2(10, 20));
+	//Debug::Print("Click Force:" + std::to_string(forceMagnitude), Vector2(10, 20));
 	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 100.0f;
 
 	if (!selectionObject) {
@@ -824,7 +1004,7 @@ void TutorialGame::MoveSelectedObject() {
 	// Gravity handling:
 	if (!isGrounded) {
 		// Ensure gravity is applied when the object is in the air
-		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -9.8f, 0));  // Assuming standard gravity
+		selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -30.8f, 0));  // Assuming standard gravity
 	}
 
 	// Push the selected object using the mouse

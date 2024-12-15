@@ -51,6 +51,13 @@ void GameObject::UpdateBroadphaseAABB() {
 	}
 }
 
+void GameObject::SetDoorOpen(bool state)
+{
+	isDoorOpen = state;
+	std::cout << "SetDoorOpen called on " << name
+		<< " with state: " << (isDoorOpen ? "true" : "false") << std::endl;
+}
+
 /* This would allow you to write subclasses to encapsulate any
 of the object construction or logic required for your game,
 whether it uses state machines, or its own custom logic just
@@ -73,4 +80,27 @@ void NCL::CSC8503::GameObject::GameObjectUpdate(float dt)
 		this->GetTransform().SetOrientation(currentOrientation);
 	}
 
+	// Log `isDoorOpen` state
+	//std::cout << "GameObjectUpdate: " << name << " - isDoorOpen: " << (isDoorOpen ? "true" : "false") << std::endl;
+
+	if (this->GetName() == "door") {
+		static float elapsedTime = 0.0f; // Keeps track of time for oscillation
+		elapsedTime += dt; // Increment with delta time
+
+		// Oscillation parameters
+		float amplitude = 5.0f; // Maximum vertical movement
+		float speed = 5.0f;     // Speed of the oscillation
+
+		// Calculate new Y position using sine wave
+		float yOffset = amplitude * sin(speed * elapsedTime);
+		Vector3 currentPosition = this->GetTransform().GetPosition();
+
+		// Set the new position
+		this->GetTransform().SetPosition(Vector3(currentPosition.x, 20.0f + yOffset, currentPosition.z));
+	}
+
+	
+	if (isEnemyCollectedBonus) {
+		Debug::Print("Enemy has collected a bonus", Vector2(25, 30), Debug::YELLOW);
+	}
 }

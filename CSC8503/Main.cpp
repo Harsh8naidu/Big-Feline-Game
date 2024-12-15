@@ -180,8 +180,8 @@ hide or show the
 
 int main(int argc, char** argv) {
 	WindowInitialisation initInfo;
-	initInfo.width		= 1280;
-	initInfo.height		= 720;
+	initInfo.width		= 2560;
+	initInfo.height		= 1440;
 	initInfo.windowTitle = "CSC8503 Game technology!";
 
 	Window*w = Window::CreateGameWindow(initInfo);

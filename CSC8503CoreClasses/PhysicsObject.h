@@ -12,6 +12,12 @@ namespace NCL {
 			PhysicsObject(Transform* parentTransform, const CollisionVolume* parentVolume);
 			~PhysicsObject();
 
+			void SetElasticity(float newElasticity);
+
+			float GetElasticity() const {
+				return elasticity;
+			}
+
 			float GetLinearDamping() const {
 				return linearDamping;
 			}
@@ -77,6 +83,7 @@ namespace NCL {
 			void InitCubeInertia();
 			void InitSphereInertia();
 			void InitHollowSphereInertia();
+			void InitCapsuleInertia();
 
 			void UpdateInertiaTensor();
 

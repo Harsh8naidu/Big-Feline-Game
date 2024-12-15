@@ -12,7 +12,7 @@ using namespace NCL;
 using namespace NCL::Maths;
 
 Plane::Plane(void) {
-	normal		= Vector3(0, 1, 0);
+	normal = Vector3(0, 1, 0); // I changed this from Vector3(0,1,0) to Vector3(0,0,0)
 	distance	= 0.0f;
 };
 
