@@ -41,10 +41,24 @@ namespace NCL {
 
 			void AddCubesAroundSphere();
 
+			void SpawnBonus();
+
+			void PlaneVsAABB();
+
+			void CapsuleVsAABB();
+
+			void PenaltyMethodOnSphere();
+
+			void OBBvsOBB();
+
+			void CapsuleVsCapsule();
+
 			void TestPathfinding();
 			void DisplayPathfinding();
 
 			void SetupEnemyPath();
+
+			void NavMeshPathFinding();
 
 			std::map<int, NetworkPlayer*> playerPeerMap;
 
@@ -74,6 +88,7 @@ namespace NCL {
 			
 
 			vector<Vector3> testNodes;
+			vector<Vector3> navMeshNodes;
 
 			NavigationGrid* gridForMaze;
 			TutorialGame* game = new TutorialGame();

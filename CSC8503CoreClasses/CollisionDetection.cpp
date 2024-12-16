@@ -178,6 +178,9 @@ bool CollisionDetection::ObjectIntersection(GameObject* a, GameObject* b, Collis
 		return OBBIntersection((OBBVolume&)*volA, transformA, (OBBVolume&)*volB, transformB, collisionInfo);
 	}
 	//Two Capsules
+	if (pairType == VolumeType::Capsule) {
+		return CapsuleIntersection((CapsuleVolume&)*volA, transformA, (CapsuleVolume&)*volB, transformB, collisionInfo);
+	}
 
 	//AABB vs Sphere pairs
 	if (volA->type == VolumeType::AABB && volB->type == VolumeType::Sphere) {
@@ -238,8 +241,131 @@ bool CollisionDetection::ObjectIntersection(GameObject* a, GameObject* b, Collis
 		return PlaneSphereIntersection((Plane&)*volB, (SphereVolume&)*volA, transformA, collisionInfo);
 	}
 
+	if (volA->type == VolumeType::OBB && volB->type == VolumeType::AABB) {
+		collisionInfo.a = b;
+		collisionInfo.b = a;
+		return OBBAABBIntersection((OBBVolume&)*volA, transformA, (AABBVolume&)*volB, transformB, collisionInfo);
+	}
+
+	if (volA->type == VolumeType::AABB && volB->type == VolumeType::OBB) {
+		return OBBAABBIntersection((OBBVolume&)*volB, transformB, (AABBVolume&)*volA, transformA, collisionInfo);
+	}
+
 	return false;
 }
+
+bool CollisionDetection::CapsuleIntersection(const CapsuleVolume& volumeA, const Transform& worldTransformA,
+	const CapsuleVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {
+	// Get the half-height and radius of each capsule
+	float halfHeightA = volumeA.GetHalfHeight();
+	float radiusA = volumeA.GetRadius();
+
+	float halfHeightB = volumeB.GetHalfHeight();
+	float radiusB = volumeB.GetRadius();
+
+	// Get the positions of the capsule's centers
+	Vector3 positionA = worldTransformA.GetPosition();
+	Vector3 positionB = worldTransformB.GetPosition();
+
+	// Calculate the squared distance between the capsule centers
+	float distanceSquared = Vector::LengthSquared(positionB - positionA);
+	
+	// Calculate the sum of the radii
+	float sumRadii = radiusA + radiusB;
+
+	// Check if the capsules are too far apart to intersect
+	if (distanceSquared > sumRadii * sumRadii) {
+		return false;
+	}
+
+	// Check if the capsules are overlapping
+	if (distanceSquared < sumRadii * sumRadii) {
+		Vector3 normal = Vector::Normalise(positionB - positionA);
+		float penetration = sumRadii - sqrt(distanceSquared);
+
+		// Calculate the contact points
+		Vector3 localA = normal * radiusA;
+		Vector3 localB = -normal * radiusB;
+
+		collisionInfo.AddContactPoint(localA, localB, normal, penetration);
+		return true;
+	}
+
+	// Calculate the closest points on the capsule line segments
+	Vector3 closestA = Vector::ClosestPointOnLineSegment(positionB, positionA - Vector3(0, halfHeightA, 0), positionA + Vector3(0, halfHeightA, 0));
+	Vector3 closestB = Vector::ClosestPointOnLineSegment(positionA, positionB - Vector3(0, halfHeightB, 0), positionB + Vector3(0, halfHeightB, 0));
+
+	// Calculate the squared distance between the closest points
+	float distanceASquared = Vector::LengthSquared(closestA - positionB);
+	float distanceBSquared = Vector::LengthSquared(closestB - positionA);
+
+	// Check if the capsules are overlapping
+	if (distanceASquared < sumRadii * sumRadii && distanceBSquared < sumRadii * sumRadii) {
+		Vector3 normal = Vector::Normalise(positionB - positionA);
+		float penetration = sumRadii - sqrt(distanceASquared);
+
+		// Calculate the contact points
+		Vector3 localA = closestA - positionA;
+		Vector3 localB = closestB - positionB;
+
+		collisionInfo.AddContactPoint(localA, localB, normal, penetration);
+		return true;
+	}
+
+	return false;
+}
+
+bool CollisionDetection::OBBAABBIntersection(const OBBVolume& volumeA, const Transform& worldTransformA,
+	const AABBVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {
+
+	Vector3 boxAPos = worldTransformA.GetPosition();
+	Vector3 boxBPos = worldTransformB.GetPosition();
+
+	Vector3 boxASize = volumeA.GetHalfDimensions();
+	Vector3 boxBSize = volumeB.GetHalfDimensions();
+
+	bool overlap = AABBTest(boxAPos, boxBPos, boxASize, boxBSize);
+
+
+	if (overlap) {
+		static const Vector3 faces[6] = {
+			Vector3(-1, 0, 0), Vector3(1, 0, 0),
+			Vector3(0, -1, 0), Vector3(0, 1, 0),
+			Vector3(0, 0, -1), Vector3(0, 0, 1)
+		};
+
+		Vector3 maxA = boxAPos + boxASize;
+		Vector3 minA = boxAPos - boxASize;
+
+		Vector3 maxB = boxBPos + boxBSize;
+		Vector3 minB = boxBPos - boxBSize;
+
+		float distances[6] = {
+			(maxB.x - minA.x), //distance of box B to the left of box A
+			(maxA.x - minB.x), //distance of box B to the right of box A
+			(maxB.y - minA.y), //distance of box B below box A
+			(maxA.y - minB.y), //distance of box B above box A
+			(maxB.z - minA.z), //distance of box B behind box A
+			(maxA.z - minB.z)  //distance of box B in front of box A
+		};
+
+		float penetration = FLT_MAX;
+		Vector3 bestAxis;
+
+		for (int i = 0; i < 6; ++i) {
+			if (distances[i] < 0) {
+				return false; //no collision!
+			}
+			else if (distances[i] < penetration) {
+				penetration = distances[i];
+				bestAxis = faces[i];
+			}
+		}
+		collisionInfo.AddContactPoint(Vector3(), Vector3(), bestAxis, penetration);
+		return true;
+	}
+}
+
 
 bool CollisionDetection::AABBTest(const Vector3& posA, const Vector3& posB, const Vector3& halfSizeA, const Vector3& halfSizeB) {
 	Vector3 delta = posB - posA;
@@ -307,7 +433,6 @@ bool CollisionDetection::PlaneAABBIntersection(const Plane& plane, const AABBVol
 
 	return false; // No collision
 }
-
 
 //AABB/AABB Collisions
 bool CollisionDetection::AABBIntersection(const AABBVolume& volumeA, const Transform& worldTransformA,
@@ -521,6 +646,53 @@ bool CollisionDetection::SphereCapsuleIntersection(
 
 bool CollisionDetection::OBBIntersection(const OBBVolume& volumeA, const Transform& worldTransformA,
 	const OBBVolume& volumeB, const Transform& worldTransformB, CollisionInfo& collisionInfo) {
+
+	Vector3 boxAPos = worldTransformA.GetPosition();
+	Vector3 boxBPos = worldTransformB.GetPosition();
+
+	Vector3 boxASize = volumeA.GetHalfDimensions();
+	Vector3 boxBSize = volumeB.GetHalfDimensions();
+
+	bool overlap = AABBTest(boxAPos, boxBPos, boxASize, boxBSize);
+
+	if (overlap) {
+		static const Vector3 faces[6] = {
+			Vector3(-1, 0, 0), Vector3(1, 0, 0),
+			Vector3(0, -1, 0), Vector3(0, 1, 0),
+			Vector3(0, 0, -1), Vector3(0, 0, 1)
+		};
+
+		Vector3 maxA = boxAPos + boxASize;
+		Vector3 minA = boxAPos - boxASize;
+
+		Vector3 maxB = boxBPos + boxBSize;
+		Vector3 minB = boxBPos - boxBSize;
+
+		float distances[6] = {
+			(maxB.x - minA.x), //distance of box B to the left of box A
+			(maxA.x - minB.x), //distance of box B to the right of box A
+			(maxB.y - minA.y), //distance of box B below box A
+			(maxA.y - minB.y), //distance of box B above box A
+			(maxB.z - minA.z), //distance of box B behind box A
+			(maxA.z - minB.z)  //distance of box B in front of box A
+		};
+
+		float penetration = FLT_MAX;
+		Vector3 bestAxis;
+
+		for (int i = 0; i < 6; ++i) {
+			if (distances[i] < 0) {
+				return false; //no collision!
+			}
+			else if (distances[i] < penetration) {
+				penetration = distances[i];
+				bestAxis = faces[i];
+			}
+		}
+		collisionInfo.AddContactPoint(Vector3(), Vector3(), bestAxis, penetration);
+		return true;
+	}
+
 	return false;
 }
 

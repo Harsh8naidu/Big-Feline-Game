@@ -2,6 +2,7 @@
 #include "Assets.h"
 #include "Maths.h"
 #include <fstream>
+#include <queue>
 using namespace NCL;
 using namespace CSC8503;
 using namespace std;
@@ -66,10 +67,85 @@ NavigationMesh::~NavigationMesh()
 }
 
 bool NavigationMesh::FindPath(const Vector3& from, const Vector3& to, NavigationPath& outPath) {
-	const NavTri* start	= GetTriForPosition(from);
-	const NavTri* end	= GetTriForPosition(to);
+    const NavTri* startTri = GetTriForPosition(from);
+    const NavTri* endTri = GetTriForPosition(to);
 
-	return false;
+    if (!startTri || !endTri) {
+        return false; // No valid triangles for the start or end positions
+    }
+
+    struct Node {
+        const NavTri* tri;
+        float gCost; // Cost from start to this node
+        float hCost; // Heuristic cost to the end
+        float fCost; // Total cost (gCost + hCost)
+        const Node* parent;
+
+        Node(const NavTri* t, float g, float h, const Node* p)
+            : tri(t), gCost(g), hCost(h), fCost(g + h), parent(p) {}
+
+        bool operator<(const Node& other) const {
+            return fCost > other.fCost; // Reverse for priority queue
+        }
+    };
+
+    auto Heuristic = [](const Vector3& a, const Vector3& b) -> float {
+		return Vector::Length(a - b);
+        };
+
+    std::priority_queue<Node> openSet;
+    std::unordered_map<const NavTri*, float> gScore;
+    std::unordered_map<const NavTri*, const Node*> nodeMap;
+
+    Node startNode(startTri, 0.0f, Heuristic(startTri->centroid, endTri->centroid), nullptr);
+    openSet.push(startNode);
+    gScore[startTri] = 0.0f;
+    nodeMap[startTri] = &startNode;
+
+    while (!openSet.empty()) {
+        Node current = openSet.top();
+        openSet.pop();
+
+        if (current.tri == endTri) {
+            // Reconstruct the path
+            const Node* pathNode = &current;
+            std::vector<Vector3> waypoints;
+
+            while (pathNode != nullptr) {
+                waypoints.emplace_back(pathNode->tri->centroid);
+                pathNode = pathNode->parent;
+            }
+
+            std::reverse(waypoints.begin(), waypoints.end());
+
+            for (const Vector3& waypoint : waypoints) {
+                outPath.PushWaypoint(waypoint);
+            }
+
+            return true;
+        }
+
+        for (int i = 0; i < 3; ++i) {
+            const NavTri* neighbor = current.tri->neighbours[i];
+
+            if (!neighbor) {
+                continue;
+            }
+
+            float tentativeGScore = gScore[current.tri] + Heuristic(current.tri->centroid, neighbor->centroid);
+
+            if (gScore.find(neighbor) == gScore.end() || tentativeGScore < gScore[neighbor]) {
+                gScore[neighbor] = tentativeGScore;
+                float hCost = Heuristic(neighbor->centroid, endTri->centroid);
+                Node neighborNode(neighbor, tentativeGScore, hCost, nodeMap[current.tri]);
+
+                openSet.push(neighborNode);
+                nodeMap[neighbor] = &neighborNode;
+            }
+        }
+    }
+
+    return false; // No path found
 }
 
 /*

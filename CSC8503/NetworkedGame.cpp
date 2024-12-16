@@ -12,6 +12,7 @@
 #include "TestPacketReceiver.h"
 
 #include "NetworkPlayer.h"
+#include <NavigationMesh.h>
 
 #define COLLISION_MSG 30
 
@@ -223,10 +224,6 @@ void NetworkedGame::UpdateGame(float dt) {
 		Debug::Print("This is Server Player", Vector2(2, 15), Debug::MAGENTA);
 		server->UpdateServer();
 	}
-
-	
-
-
 	
 	if (angryGoose) {
 		angryGoose->Update(dt);
@@ -382,6 +379,71 @@ void NetworkedGame::SetupEnemyPath() {
 	angryGoose = AddAngryGooseToWorld(startPos, path, player, world);
 }
 
+void NetworkedGame::NavMeshPathFinding() {
+	NavigationMesh navMesh("test.navmesh");
+
+	std::cout << "Visualizing Navigation Mesh:" << std::endl;
+	for (const auto& tri : navMesh.GetTriangles()) { // Assuming GetTriangles() is implemented
+		// Retrieve vertices of the triangle
+		Vector3 v0 = navMesh.GetVertex(tri.indices[0]);
+		Vector3 v1 = navMesh.GetVertex(tri.indices[1]);
+		Vector3 v2 = navMesh.GetVertex(tri.indices[2]);
+
+		//std::cout << "Triangle: " << v0 << ", " << v1 << ", " << v2 << std::endl;
+
+		// Draw edges of the triangle
+		Debug::DrawLine(v0, v1, Vector4(0, 0, 1, 1)); // Blue for edges
+		Debug::DrawLine(v1, v2, Vector4(0, 0, 1, 1));
+		Debug::DrawLine(v2, v0, Vector4(0, 0, 1, 1));
+
+		// Optionally, draw the centroid
+		Debug::DrawLine(tri.centroid, Vector4(1, 0, 0, 1)); // Red for centroid
+	}
+
+	NavigationPath outPath;
+
+	/* I could not find a startPos and endPos for the navmesh. I tried
+	logging the data vertices to the console and finding a start pos
+	but the program wouldn't load at all, so I couldn't demonstrate it.
+	Please provide me some feedback regarding this while grading, on how
+	I could have chosen startpos and endPos
+	*/
+
+	// This is the commented out startPos and endPos I tried to use which made it crash
+	//Vector3 startPos(64.0, 15.7834, 46.5556);   // Centroid of a triangle in the positive region
+	//Vector3 endPos(-21.7222, 21.0334, -45.1111); // Centroid of a triangle in the negative region
+
+	// This is tutorial's startPos and endPos for the navigation grid
+	Vector3 startPos(80, 0, 10);
+	Vector3 endPos(80, 0, 80);
+
+	bool found = navMesh.FindPath(startPos, endPos, outPath);
+
+	std::vector<Vector3> path;
+	Vector3 pos;
+	while (outPath.PopWaypoint(pos)) {
+		path.push_back(pos);
+	}
+
+	if (path.empty()) {
+		std::cout << "No path found for NavMesh!" << std::endl;
+		return;
+	}
+
+	std::cout << "NavMesh Path Found:" << std::endl;
+	for (const auto& waypoint : path) {
+		std::cout << "Waypoint: " << waypoint << std::endl;
+	}
+
+	// Display the path
+	for (int i = 1; i < navMeshNodes.size(); ++i) {
+		Vector3 a = navMeshNodes[i - 1];
+		Vector3 b = navMeshNodes[i];
+		std::cout << "Drawing line from " << a << " to " << b << std::endl;
+		Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
+	}
+}
+
 
 void NetworkedGame::AddMazeToWorld() {
 	Vector3 cubeSize = Vector3(5, 5, 5);
@@ -416,9 +478,9 @@ void NetworkedGame::AddDoorPuzzle()
 }
 
 void NetworkedGame::AddCubesAroundSphere() {
-	Vector3 spherePosition(-60, 10, -80); // Sphere's position
-	float sphereRadius = 5.0f;           // Sphere's radius
-	float cubeSize = 3.0f;               // Half-size of the cube (cube dimensions = 4x4x4)
+	Vector3 spherePosition(-60, 10, -80);
+	float sphereRadius = 5.0f;
+	float cubeSize = 3.0f;  // Half-size of the cube (cube dimensions = 4x4x4)
 
 	// Offsets to arrange cubes in a square around the sphere
 	float offset = sphereRadius + cubeSize - 1;
@@ -428,7 +490,6 @@ void NetworkedGame::AddCubesAroundSphere() {
 		for (int z = -1; z <= 1; ++z) {
 			if (x == 0 && z == 0) continue; // Skip the center position
 			AddOBBCubeToWorld(spherePosition + Vector3(x * offset, 10, z * offset * 2), Vector3(cubeSize, cubeSize, cubeSize), 0);
-			//AddOBBCubeToWorld(spherePosition + Vector3(x * offset, -10, z * offset * 2), Vector3(cubeSize, cubeSize, cubeSize), 0);
 		}
 	}
 
@@ -439,6 +500,52 @@ void NetworkedGame::AddCubesAroundSphere() {
 			AddOBBCubeToWorld(spherePosition + Vector3(x * offset * 1.5, 0, z * offset * 2), Vector3(cubeSize, cubeSize, cubeSize), 0);
 		}
 	}
+}
+
+void NetworkedGame::SpawnBonus() {
+	// Add bonus to the world
+	bonus1 = AddBonusToWorld(Vector3(-30, 2, 0));
+	bonus2 = AddBonusToWorld(Vector3(-50, 60.5, 55));
+	bonus3 = AddBonusToWorld(Vector3(-130, 61, 60));
+	bonus4 = AddBonusToWorld(Vector3(20, 3, 70));
+	bonus5 = AddBonusToWorld(Vector3(-110, 2, -40));
+	bonus6 = AddBonusToWorld(Vector3(-60, 2, -90));
+	bonus7 = AddBonusToWorld(Vector3(-140, 95, 55));
+}
+
+void NetworkedGame::PlaneVsAABB() {
+	AddCubeToWorld(Vector3(-30, 2, 20), Vector3(10, 0.4, 10), 0);
+	AddCubeToWorld(Vector3(-30, 2, 20), Vector3(5, 1, 5), 0);
+	AddPlaneToWorld(Vector3(-30, 10, 20), Vector3(2, 2, 2));
+	AddCubeToWorld(Vector3(-30, 20, 20), Vector3(5, 5, 5), 2);
+}
+
+void NetworkedGame::CapsuleVsAABB() {
+	capsule = AddCapsuleToWorld(Vector3(-30, 100, 60), 5, 5, 20);
+	AddCubeToWorld(Vector3(-30, 2, 60), Vector3(6, 6, 6), 0);
+	AddCubeToWorld(Vector3(-30, 2, 72.5), Vector3(6, 6, 6), 0);
+	AddCubeToWorld(Vector3(-30, 2, 85), Vector3(6, 6, 6), 0);
+}
+
+void NetworkedGame::PenaltyMethodOnSphere() {
+	AddCubesAroundSphere();
+	AddSphereToWorld(Vector3(-60, 10, -80), 5, 1, true);
+}
+
+void NetworkedGame::OBBvsOBB() {
+	AddPlaneToWorld(Vector3(-30, 10, -20), Vector3(2, 2, 2));
+	AddPlaneToWorld(Vector3(-30, 13, -20), Vector3(2, 2, 2));
+	AddPlaneToWorld(Vector3(-30, 16, -20), Vector3(2, 2, 2));
+	AddPlaneToWorld(Vector3(-30, 18, -20), Vector3(2, 2, 2));
+	AddOBBCubeToWorld(Vector3(-30, 60, -20), Vector3(5, 5, 5), 1);
+	AddOBBCubeToWorld(Vector3(-30, 20, -20), Vector3(5, 5, 5), 1);
+}
+
+void NetworkedGame::CapsuleVsCapsule() {
+	AddCapsuleToWorld(Vector3(60, 60, -60), 7, 4, 1);
+	AddCapsuleToWorld(Vector3(60, 30, -60), 7, 4, 1);
+	AddCubeToWorld(Vector3(60, 5, -60), Vector3(5, 5, 5), 1);
+	
 }
 
 
@@ -457,21 +564,13 @@ void NetworkedGame::StartLevel() {
 
 	AddDoorPuzzle();
 
-	bonus1 = AddBonusToWorld(Vector3(-30, 2, 0));
-	bonus2 = AddBonusToWorld(Vector3(-50, 60.5, 55));
-	bonus3 = AddBonusToWorld(Vector3(-130, 61, 60));
-	bonus4 = AddBonusToWorld(Vector3(20, 3, 70));
-	bonus5 = AddBonusToWorld(Vector3(-110, 2, -40));
-	bonus6 = AddBonusToWorld(Vector3(-60, 2, -90));
+	SpawnBonus();
 	AddMazeToWorld();
 
 	//kitten1 = AddKittensToWorld(Vector3(20, 2, -30));
 
 	player = SpawnPlayer(Vector3(0, 2, -30), "player");
 	player2 = SpawnPlayer(Vector3(0, 2, -60), "player2");
-
-	/*std::cout << "Player 1: " << player << std::endl;
-	std::cout << "Player 2: " << player2 << std::endl;*/
 
 	// local player
 	NetworkObject* networkObj = new NetworkObject(*player, 1);
@@ -482,27 +581,23 @@ void NetworkedGame::StartLevel() {
 	player2->SetNetworkObject(networkObj2);
 	networkObjects.insert(std::make_pair(2, networkObj2));
 
-	BridgeConstraintTest();
+	PositionBridgeConstraint();
+	OrientedBridgeConstraint();
 
 	AddDoorPuzzle();
 
 	plane = AddBlackObstacleToWorld(Vector3(-110, 50, 30), Vector3(1,1,1), 20);
 	plane2 = AddBlackObstacleToWorld(Vector3(-10, 50, 0), Vector3(1, 1, 1), 20);
 
-	capsule = AddCapsuleToWorld(Vector3(-30, 100, 60), 5, 5, 20);
+	PlaneVsAABB();
+	CapsuleVsAABB();
+	OBBvsOBB();
+	CapsuleVsCapsule();
 
+	PenaltyMethodOnSphere();
 
-	AddCubeToWorld(Vector3(-30, 2, 20), Vector3(10, 0.4, 10), 0);
-	AddCubeToWorld(Vector3(-30, 2, 20), Vector3(5, 1, 5), 0);
-	AddPlaneToWorld(Vector3(-30, 10, 20), Vector3(2, 2, 2));
-	AddCubeToWorld(Vector3(-30, 20, 20), Vector3(5, 5, 5), 2);
-
-	AddCubeToWorld(Vector3(-30, 2, 60), Vector3(6, 6, 6), 0);
-	AddCubeToWorld(Vector3(-30, 2, 72.5), Vector3(6, 6, 6), 0);
-	AddCubeToWorld(Vector3(-30, 2, 85), Vector3(6, 6, 6), 0);
-
-	AddCubesAroundSphere();
-	AddSphereToWorld(Vector3(-60, 10, -80), 5, 1, true);
+	// Add the nav mesh pathfinding
+	NavMeshPathFinding();
 
 	if (server) {
 		player->controllerByServer = true; // Server controller by player

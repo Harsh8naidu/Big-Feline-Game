@@ -12,6 +12,8 @@ https://research.ncl.ac.uk/game/
 
 namespace NCL::Maths {
 
+
+
     template <typename T, uint32_t rows, uint32_t cols>
     struct MatrixTemplate    {
         T array[cols][rows]; //We store matrices in col major format
@@ -23,6 +25,14 @@ namespace NCL::Maths {
                     array[i][j] = a;
                 }
             }
+        }
+
+        // Method to retrieve a specific element from the matrix
+        constexpr T GetElement(uint32_t row, uint32_t col) const {
+            if (col >= cols || row >= rows) {
+                throw std::out_of_range("Matrix indices out of bounds");
+            }
+            return array[col][row];
         }
 
         constexpr VectorTemplate<T, cols> GetRow(uint32_t rr) const {

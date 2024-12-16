@@ -73,6 +73,7 @@ void TutorialGame::InitialiseAssets() {
 
 	bonusTex = renderer->LoadTexture("goldtex.png");
 
+	purpleTex = renderer->LoadTexture("PurpleTex.png");
 
 	InitCamera();
 	//InitWorld(); //This is now done in the network tutorial to allow for server/client selection
@@ -154,7 +155,7 @@ void TutorialGame::UpdateGame(float dt) {
 
 	score = player->GetScore();
 
-	Debug::Print("Score: " + std::to_string(score) + "/6", Vector2(75, 15), Debug::GREEN);
+	Debug::Print("Score: " + std::to_string(score) + "/7", Vector2(75, 15), Debug::GREEN);
 
 	if (isGameEnd) {
 		Debug::Print("High Score: " + std::to_string(score), Vector2(40, 20), Debug::RED);
@@ -172,7 +173,7 @@ void TutorialGame::UpdateGame(float dt) {
 		Debug::Print(timerText, Vector2(35, 10), Debug::GREEN);
 
 		// End the game after 5 minutes
-		if (gameTimer >= 300.0f || score == 6) { // 300 seconds = 5 minutes
+		if (gameTimer >= 300.0f || score == 7) { // 300 seconds = 5 minutes
 
 			// Logic to handle game end (e.g., restart, quit, show end screen)
 			isGameStart = false;
@@ -400,7 +401,7 @@ void TutorialGame::InitWorld() {
 	physics->Clear();
 
 	// Create a simple constraint to test the system
-	BridgeConstraintTest();
+	//BridgeConstraintTest();
 
 	InitMixedGridWorld(15, 15, 3.5f, 3.5f);
 
@@ -601,7 +602,7 @@ GameObject* TutorialGame::AddOBBCubeToWorld(const Vector3& position, Vector3 dim
 		.SetPosition(position)
 		.SetScale(dimensions * 2.0f);
 
-	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
+	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, purpleTex, basicShader));
 	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
 
 	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
@@ -745,7 +746,7 @@ GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 	return apple;
 }
 
-void TutorialGame::BridgeConstraintTest()
+void TutorialGame::PositionBridgeConstraint()
 {
 	Vector3 cubeSize = Vector3(4, 4, 4);
 
@@ -779,6 +780,72 @@ void TutorialGame::BridgeConstraintTest()
 	// Draw debug line between the last cube and the end cube
 	//Debug::DrawLine(previous->GetTransform().GetPosition(), end->GetTransform().GetPosition(), Vector4(0, 0, 1, 1), 120);
 }
+
+void TutorialGame::OrientedBridgeConstraint() {
+	Vector3 cubeSize = Vector3(4, 4, 4);
+
+	float invCubeMass = 1.0f;      // Mass of the cubes
+	int numLinks = 12;            // Number of cubes in the circle
+	float radius = 35.0f;         // Radius of the circle
+	float maxDistance = 20.0f;    // Maximum distance between linked cubes
+
+	Vector3 centerPos = Vector3(-140, 90, 20); // Center of the circle
+
+	std::vector<GameObject*> cubes; // Store all cubes
+
+	// Create cubes arranged in a circle
+	for (int i = 0; i < numLinks; ++i) {
+		float angle = (Maths::PI * 2.0f / numLinks) * i; // Angle for each cube
+		Vector3 pos = centerPos + Vector3(
+			radius * cos(angle),
+			0,
+			radius * sin(angle)
+		);
+
+		GameObject* cube = AddCubeToWorld(pos, cubeSize, invCubeMass);
+		cubes.push_back(cube);
+	}
+
+	// Create four anchor points
+	GameObject* anchorFront = AddCubeToWorld(centerPos + Vector3(0, 0, radius), Vector3(2, 2, 2), 0); // Static anchor front
+	GameObject* anchorBack = AddCubeToWorld(centerPos + Vector3(0, 0, -radius), Vector3(2, 2, 2), 0); // Static anchor back
+	GameObject* anchorLeft = AddCubeToWorld(centerPos + Vector3(-radius, 0, 0), Vector3(2, 2, 2), 0); // Static anchor left
+	GameObject* anchorRight = AddCubeToWorld(centerPos + Vector3(radius, 0, 0), Vector3(2, 2, 2), 0); // Static anchor right
+
+	// Add anchor constraints
+	PositionConstraint* anchorConstraint1 = new PositionConstraint(anchorFront, cubes[0], maxDistance);
+	PositionConstraint* anchorConstraint2 = new PositionConstraint(anchorBack, cubes[numLinks / 2], maxDistance);
+	PositionConstraint* anchorConstraint3 = new PositionConstraint(anchorLeft, cubes[numLinks / 4], maxDistance);
+	PositionConstraint* anchorConstraint4 = new PositionConstraint(anchorRight, cubes[3 * numLinks / 4], maxDistance);
+
+	world->AddConstraint(anchorConstraint1);
+	world->AddConstraint(anchorConstraint2);
+	world->AddConstraint(anchorConstraint3);
+	world->AddConstraint(anchorConstraint4);
+
+	// Add position constraints and orientation constraints between adjacent cubes
+	for (int i = 0; i < numLinks; ++i) {
+		GameObject* current = cubes[i];
+		GameObject* next = cubes[(i + 1) % numLinks]; // Wrap around to form a circle
+
+		// Position constraint to keep cubes at a maximum distance
+		PositionConstraint* posConstraint = new PositionConstraint(current, next, maxDistance);
+		world->AddConstraint(posConstraint);
+
+		// Orientation constraint to align orientations between cubes
+		OrientationConstraint* oriConstraint = new OrientationConstraint(current, next);
+		world->AddConstraint(oriConstraint);
+
+		// Debug line between adjacent cubes
+		Debug::DrawLine(
+			current->GetTransform().GetPosition(),
+			next->GetTransform().GetPosition(),
+			Vector4(1, 0, 0, 1), // Red color
+			120.0f // Duration
+		);
+	}
+}
+
 
 StateGameObject* TutorialGame::AddStateObjectToWorld(const Vector3& position)
 {

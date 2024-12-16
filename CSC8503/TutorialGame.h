@@ -76,7 +76,9 @@ namespace NCL {
 			GameObject* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
 
-			void BridgeConstraintTest();
+			void PositionBridgeConstraint();
+
+			void OrientedBridgeConstraint();
 
 			StateGameObject* AddStateObjectToWorld(const Vector3& position);
 
@@ -116,6 +118,8 @@ namespace NCL {
 
 			Texture* bonusTex = nullptr;
 
+			Texture* purpleTex = nullptr;
+
 			//Coursework Meshes
 			Mesh*	catMesh		= nullptr;
 			Mesh*	kittenMesh	= nullptr;
@@ -143,6 +147,7 @@ namespace NCL {
 			GameObject* bonus4 = nullptr;
 			GameObject* bonus5 = nullptr;
 			GameObject* bonus6 = nullptr;
+			GameObject* bonus7 = nullptr;
 
 			GameObject* capsule = nullptr;
 			

@@ -218,6 +218,19 @@ Quaternion Quaternion::AxisAngleToQuaterion(const Vector3& vector, float degrees
 	return Quaternion((float)(vector.x * result), (float)(vector.y * result), (float)(vector.z * result), (float)cos(theta / 2.0f));
 }
 
+void Quaternion::QuaternionToAxisAngle(const Quaternion& q, Vector3& vector, float& degrees) {
+	Quaternion temp = q.Normalised();
+
+	degrees = acos(temp.w) * 2.0f;
+	float sinTheta = sqrt(1.0f - temp.w * temp.w);
+
+	if (abs(sinTheta) < 0.0005) {
+		vector = Vector3(1.0f, 0.0f, 0.0f);
+	}
+	else {
+		vector = Vector3(temp.x, temp.y, temp.z) / sinTheta;
+	}
+}
 
 Vector3		Quaternion::operator *(const Vector3 &a)	const {
 	Quaternion newVec = *this * Quaternion(a.x, a.y, a.z, 0.0f) * Conjugate();

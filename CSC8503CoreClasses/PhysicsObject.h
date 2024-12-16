@@ -12,6 +12,8 @@ namespace NCL {
 			PhysicsObject(Transform* parentTransform, const CollisionVolume* parentVolume);
 			~PhysicsObject();
 
+			float GetInverseInertia() const;
+
 			void SetElasticity(float newElasticity);
 
 			float GetElasticity() const {

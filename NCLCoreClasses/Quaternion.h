@@ -46,6 +46,7 @@ namespace NCL::Maths {
 
 		static Quaternion EulerAnglesToQuaternion(float pitch, float yaw, float roll);
 		static Quaternion AxisAngleToQuaterion(const Vector3& vector, float degrees);
+		static void		QuaternionToAxisAngle(const Quaternion& q, Vector3& vector, float& degrees);
 
 		Matrix3		ToMatrix3() const;
 

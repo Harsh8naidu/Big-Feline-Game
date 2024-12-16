@@ -25,6 +25,19 @@ namespace NCL::Maths {
         }
     };
 
+    template <typename T, uint32_t n>
+    std::ostream& operator<<(std::ostream& os, const VectorTemplate<T, n>& vec) {
+        os << "[";
+        for (uint32_t i = 0; i < n; ++i) {
+            os << vec[i];
+            if (i < n - 1) {
+                os << ", ";
+            }
+        }
+        os << "]";
+        return os;
+    };
+
     using Vector2 = VectorTemplate<float, 2>;
     using Vector3 = VectorTemplate<float, 3>;
     using Vector4 = VectorTemplate<float, 4>;
@@ -132,7 +145,6 @@ namespace NCL::Maths {
             return ((T*)this)[i];
         }
     };
-
 
     template <typename T, uint32_t n>
     constexpr VectorTemplate<T, n>  operator+(const VectorTemplate<T, n>& a, const VectorTemplate<T, n>& b) {

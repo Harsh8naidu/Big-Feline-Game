@@ -17,6 +17,17 @@ PhysicsObject::~PhysicsObject()	{
 
 }
 
+float PhysicsObject::GetInverseInertia() const {
+	// Assuming a symmetric tensor, extract xx, yy, zz components
+	float scalarInverseInertia = inverseInteriaTensor.GetElement(0, 0) +
+		inverseInteriaTensor.GetElement(1, 1) +
+		inverseInteriaTensor.GetElement(2, 2);
+
+	// Return an average inverse inertia for simplicity
+	return scalarInverseInertia / 3.0f;
+}
+
+
 void PhysicsObject::SetElasticity(float newElasticity) {
 	elasticity = newElasticity;
 }

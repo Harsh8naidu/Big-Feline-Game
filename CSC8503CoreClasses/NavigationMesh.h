@@ -7,14 +7,8 @@ namespace NCL {
 	namespace CSC8503 {
 		class NavigationMesh : public NavigationMap	{
 		public:
-			NavigationMesh();
-			NavigationMesh(const std::string&filename);
-			~NavigationMesh();
-
-			bool FindPath(const Vector3& from, const Vector3& to, NavigationPath& outPath) override;
-		
-		protected:
-			struct NavTri {
+		public:
+			struct NavTri {  // Move NavTri to public scope
 				Plane   triPlane;
 				Vector3 centroid;
 				float	area;
@@ -34,6 +28,16 @@ namespace NCL {
 				}
 			};
 
+			NavigationMesh();
+			NavigationMesh(const std::string& filename);
+			~NavigationMesh();
+
+			bool FindPath(const Vector3& from, const Vector3& to, NavigationPath& outPath) override;
+
+			const std::vector<NavTri>& GetTriangles() const { return allTris; }
+			const Vector3& GetVertex(int index) const { return allVerts[index]; }
+
+		protected:
 			const NavTri* GetTriForPosition(const Vector3& pos) const;
 
 			std::vector<NavTri>		allTris;
