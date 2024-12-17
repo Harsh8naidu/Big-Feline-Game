@@ -75,6 +75,18 @@ void TutorialGame::InitialiseAssets() {
 
 	purpleTex = renderer->LoadTexture("PurpleTex.png");
 
+	tesselationTex = renderer->LoadTexture("TesselationTex.png");
+
+	gooseTex = renderer->LoadTexture("FeatherTex.png");
+
+	floorTex = renderer->LoadTexture("FloorTex.png");
+
+	ballTex = renderer->LoadTexture("BallTex.png");
+
+	doorTex = renderer->LoadTexture("DoorTex.png");
+
+	furTex = renderer->LoadTexture("FurTex.png");
+
 	InitCamera();
 	//InitWorld(); //This is now done in the network tutorial to allow for server/client selection
 }
@@ -96,6 +108,13 @@ TutorialGame::~TutorialGame()	{
 	delete capsuleTex;
 
 	delete bonusTex;
+	delete purpleTex;
+	delete tesselationTex;
+	delete gooseTex;
+	delete floorTex;
+	delete ballTex;
+	delete doorTex;
+	delete furTex;
 
 	delete physics;
 	delete renderer;
@@ -135,6 +154,7 @@ void TutorialGame::UpdateGame(float dt) {
 		gameTimer = 0.0f;
 	}
 	else if (!isGameStart) {
+		Debug::Print("Press T to toggle the timer", Vector2(25, 23), Debug::CYAN);
 		Debug::Print("Press C to start the Game", Vector2(25, 30), Debug::CYAN);
 		Debug::Print("Press P to pause the Game", Vector2(25, 40), Debug::CYAN);
 
@@ -155,13 +175,18 @@ void TutorialGame::UpdateGame(float dt) {
 
 	score = player->GetScore();
 
-	Debug::Print("Score: " + std::to_string(score) + "/7", Vector2(75, 15), Debug::GREEN);
+	Debug::Print("Score: " + std::to_string(score) + "/10", Vector2(75, 15), Debug::GREEN);
 
 	if (isGameEnd) {
 		Debug::Print("High Score: " + std::to_string(score), Vector2(40, 20), Debug::RED);
 	}
 
-	if (isGameStart) {
+	if (Window::GetKeyboard()->KeyPressed(NCL::KeyCodes::T)) {
+		std::cout << "Timer Toggled" << std::endl;
+		timerToggle = !timerToggle;
+	}
+
+	if (isGameStart && timerToggle) {
 		// Update the timer
 		gameTimer += dt;
 
@@ -173,7 +198,7 @@ void TutorialGame::UpdateGame(float dt) {
 		Debug::Print(timerText, Vector2(35, 10), Debug::GREEN);
 
 		// End the game after 5 minutes
-		if (gameTimer >= 300.0f || score == 7) { // 300 seconds = 5 minutes
+		if (gameTimer >= 300.0f || score == 10) { // 300 seconds = 5 minutes
 
 			// Logic to handle game end (e.g., restart, quit, show end screen)
 			isGameStart = false;
@@ -229,12 +254,12 @@ void TutorialGame::UpdateGame(float dt) {
 
 	UpdateKeys();
 
-	if (useGravity) {
+	/*if (useGravity) {
 		Debug::Print("(G)ravity on", Vector2(5, 95), Debug::RED);
 	}
 	else {
 		Debug::Print("(G)ravity off", Vector2(5, 95), Debug::RED);
-	}
+	}*/
 
 	RayCollision closestCollision;
 	if (Window::GetKeyboard()->KeyPressed(KeyCodes::K) && selectionObject) {
@@ -289,10 +314,10 @@ void TutorialGame::UpdateKeys() {
 		InitCamera(); //F2 will reset the camera to a specific default place
 	}
 
-	if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
-		//useGravity = !useGravity; //Toggle gravity!
-		//physics->UseGravity(useGravity);
-	}
+	//if (Window::GetKeyboard()->KeyPressed(KeyCodes::G)) {
+	//	useGravity = !useGravity; //Toggle gravity!
+	//	physics->UseGravity(useGravity);
+	//}
 	//Running certain physics updates in a consistent order might cause some
 	//bias in the calculations - the same objects might keep 'winning' the constraint
 	//allowing the other one to stretch too much etc. Shuffling the order so that it
@@ -423,7 +448,7 @@ GameObject* TutorialGame::AddDoorToWorld(const Vector3& position) {
 		.SetPosition(position)
 		.SetOrientation(Quaternion::AxisAngleToQuaterion(Vector3(0, 0, 1), 90));
 
-	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, basicTex, basicShader));
+	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, doorTex, basicShader));
 	floor->SetPhysicsObject(new PhysicsObject(&floor->GetTransform(), floor->GetBoundingVolume()));
 
 	floor->GetPhysicsObject()->SetInverseMass(0);
@@ -521,7 +546,7 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
 		.SetScale(floorSize * 2.0f)
 		.SetPosition(position);
 
-	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, basicTex, basicShader));
+	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, floorTex, basicShader));
 	floor->SetPhysicsObject(new PhysicsObject(&floor->GetTransform(), floor->GetBoundingVolume()));
 
 	floor->GetPhysicsObject()->SetInverseMass(0);
@@ -552,7 +577,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 		.SetScale(sphereSize)
 		.SetPosition(position);
 
-	sphere->SetRenderObject(new RenderObject(&sphere->GetTransform(), sphereMesh, basicTex, basicShader));
+	sphere->SetRenderObject(new RenderObject(&sphere->GetTransform(), sphereMesh, ballTex, basicShader));
 	sphere->SetPhysicsObject(new PhysicsObject(&sphere->GetTransform(), sphere->GetBoundingVolume()));
 
 	if (isHollow) {
@@ -580,7 +605,7 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 		.SetPosition(position)
 		.SetScale(dimensions * 2.0f);
 
-	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
+	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, tesselationTex, basicShader));
 	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
 
 	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
@@ -637,26 +662,6 @@ void TutorialGame::GenerateMaze(NavigationGrid& grid) {
 	}
 }
 
-//KittenStateObject* TutorialGame::AddKittensToWorld(const Vector3& position) {
-//	KittenStateObject* kitten = new KittenStateObject();
-//
-//	SphereVolume* volume = new SphereVolume(0.5f);
-//	kitten->SetBoundingVolume((CollisionVolume*)volume);
-//	kitten->GetTransform()
-//		.SetScale(Vector3(2, 2, 2))
-//		.SetPosition(position);
-//
-//	kitten->SetRenderObject(new RenderObject(&kitten->GetTransform(), kittenMesh, nullptr, basicShader));
-//	kitten->SetPhysicsObject(new PhysicsObject(&kitten->GetTransform(), kitten->GetBoundingVolume()));
-//
-//	kitten->GetPhysicsObject()->SetInverseMass(1.0f);
-//	kitten->GetPhysicsObject()->InitSphereInertia();
-//
-//	world->AddGameObject(kitten);
-//
-//	return kitten;
-//}
-
 void TutorialGame::AddFlyingStairs() {
 	Vector3 cubeSize = Vector3(5, 5, 5);
 	Vector3 position = Vector3(0, 0, 0);
@@ -673,8 +678,6 @@ void TutorialGame::AddFlyingStairs() {
 		AddCubeToWorld(position, cubeSize, 0);
 	}
 }
-
-
 
 NetworkPlayer* TutorialGame::AddPlayerToWorld(const Vector3& position, std::string playerName) {
 	float meshSize		= 3.0f;
@@ -738,7 +741,7 @@ GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), bonusMesh, bonusTex, basicShader));
 	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
 
-	apple->GetPhysicsObject()->SetInverseMass(1.0f);
+	apple->GetPhysicsObject()->SetInverseMass(0.0f);
 	apple->GetPhysicsObject()->InitSphereInertia();
 
 	world->AddGameObject(apple);
@@ -846,6 +849,51 @@ void TutorialGame::OrientedBridgeConstraint() {
 	}
 }
 
+GameObject* TutorialGame::AddKittenHome() {
+	GameObject* cube = new GameObject("home");
+
+	Vector3 dimensions = Vector3(20, 0.3, 15);
+	AABBVolume* volume = new AABBVolume(dimensions);
+	cube->SetBoundingVolume((CollisionVolume*)volume);
+
+	cube->GetTransform()
+		.SetPosition(Vector3(20, 0, -120))
+		.SetScale(dimensions * 2.0f);
+
+	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, tesselationTex, basicShader));
+	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
+
+	cube->GetPhysicsObject()->SetInverseMass(0);
+	cube->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(cube);
+
+	return cube;
+
+}
+
+StateGameObject* TutorialGame::AddKittenToWorld(const Vector3& position, GameObject* player, GameWorld* world, GameObject* home)
+{
+	float meshSize = 3.0f;
+	StateGameObject* kitten = new StateGameObject(player, world, home);
+
+	AABBVolume* volume = new AABBVolume(Vector3(0.2f, 0.5f, 1.4f) * meshSize);
+	kitten->SetBoundingVolume((CollisionVolume*)volume);
+	kitten->GetTransform()
+		.SetScale(Vector3(2, 2, 2))
+		.SetPosition(position);
+
+	kitten->SetRenderObject(new RenderObject(&kitten->GetTransform(), kittenMesh, furTex, basicShader));
+	kitten->SetPhysicsObject(new PhysicsObject(&kitten->GetTransform(), kitten->GetBoundingVolume()));
+
+	kitten->GetPhysicsObject()->SetInverseMass(1.0f);
+	kitten->GetPhysicsObject()->InitSphereInertia();
+
+	world->AddGameObject(kitten);
+
+	return kitten;
+}
+
 
 StateGameObject* TutorialGame::AddStateObjectToWorld(const Vector3& position)
 {
@@ -875,15 +923,16 @@ StateGameObject* TutorialGame::AddAngryGooseToWorld(const Vector3& position, con
 	StateGameObject* character = new StateGameObject(path, player, world);
 
 	//AABBVolume* volume = new AABBVolume(Vector3(0.2f, 0.5f, 0.2f) * meshSize);
+	AABBVolume* volume = new AABBVolume(Vector3(0.2f, 0.5f, 1.4f) * meshSize);
 	// SphereVolume worked better for the goose
-	SphereVolume* volume = new SphereVolume(0.5f);
+	//SphereVolume* volume = new SphereVolume(0.5f);
 	character->SetBoundingVolume((CollisionVolume*)volume);
 
 	character->GetTransform()
 		.SetScale(Vector3(meshSize, meshSize, meshSize))
 		.SetPosition(position + Vector3(0, 4, 0));
 
-	character->SetRenderObject(new RenderObject(&character->GetTransform(), enemyMesh, nullptr, basicShader));
+	character->SetRenderObject(new RenderObject(&character->GetTransform(), enemyMesh, gooseTex, basicShader));
 	character->SetPhysicsObject(new PhysicsObject(&character->GetTransform(), character->GetBoundingVolume()));
 
 	character->GetPhysicsObject()->SetLinearDamping(0.2f);

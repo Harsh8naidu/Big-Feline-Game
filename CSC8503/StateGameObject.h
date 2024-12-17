@@ -14,11 +14,15 @@ namespace NCL {
 
             StateGameObject(const std::vector<Vector3>& path, GameObject* playerObj, GameWorld* world);
 
+            StateGameObject(GameObject* playerObj, GameWorld* world, GameObject* kittenHome);
+
             virtual void Update(float dt);
 
             void MoveToWaypoint(float dt);
 
             void ChasePlayer(float dt);
+
+            void FollowPlayer(float dt);
 
             bool DetectPlayer();
 
@@ -40,7 +44,7 @@ namespace NCL {
 
 			GameObject* player;
 			GameWorld* gameWorld;
-
+            GameObject* home;
             
         };
     }

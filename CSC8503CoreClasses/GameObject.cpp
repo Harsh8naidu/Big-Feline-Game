@@ -99,8 +99,15 @@ void NCL::CSC8503::GameObject::GameObjectUpdate(float dt)
 		this->GetTransform().SetPosition(Vector3(currentPosition.x, 20.0f + yOffset, currentPosition.z));
 	}
 
-	
 	if (isEnemyCollectedBonus) {
+		static float elapsedTime = 0.0f;
+		elapsedTime += dt;
 		Debug::Print("Enemy has collected a bonus", Vector2(25, 30), Debug::YELLOW);
+		
+		if (elapsedTime >= 1.0f) {
+			isEnemyCollectedBonus = false;
+			elapsedTime = 0.0f;
+		}
 	}
+	
 }

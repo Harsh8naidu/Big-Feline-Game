@@ -15,6 +15,7 @@
 namespace NCL {
 	namespace CSC8503 {
 		class NetworkPlayer;
+		class KittenStateObject;
 		class TutorialGame		{
 		public:
 			TutorialGame();
@@ -80,11 +81,18 @@ namespace NCL {
 
 			void OrientedBridgeConstraint();
 
+			GameObject* AddKittenHome();
+
+			StateGameObject* AddKittenToWorld(const Vector3& position, GameObject* player, GameWorld* world, GameObject* home);
+
 			StateGameObject* AddStateObjectToWorld(const Vector3& position);
 
 			
 			StateGameObject* testStateObject;
 			StateGameObject* angryGoose;
+			StateGameObject*  kitten1 = nullptr;
+			StateGameObject* kitten2 = nullptr;
+			StateGameObject* kitten3 = nullptr;
 
 #ifdef USEVULKAN
 			GameTechVulkanRenderer*	renderer;
@@ -120,6 +128,18 @@ namespace NCL {
 
 			Texture* purpleTex = nullptr;
 
+			Texture* tesselationTex = nullptr;
+
+			Texture* gooseTex = nullptr;
+
+			Texture* floorTex = nullptr;
+
+			Texture* ballTex = nullptr;
+
+			Texture* doorTex = nullptr;
+
+			Texture* furTex = nullptr;
+
 			//Coursework Meshes
 			Mesh*	catMesh		= nullptr;
 			Mesh*	kittenMesh	= nullptr;
@@ -150,6 +170,8 @@ namespace NCL {
 			GameObject* bonus7 = nullptr;
 
 			GameObject* capsule = nullptr;
+
+			GameObject* home = nullptr;
 			
 
 			GameObject* plane = nullptr;
@@ -161,8 +183,6 @@ namespace NCL {
 			GameObject* AddPlaneToWorld(const Vector3& position, const Vector3& scale);
 
 			GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass);
-
-			//KittenStateObject* kitten1 = nullptr;
 
 			bool isCameraLocked = false; // Toggle camera lock
 			bool isRotatingAroundObject = false;
@@ -180,6 +200,7 @@ namespace NCL {
 
 			float gameTimer = 0.0f; // Track elapsed time
 			bool isGameEnd = false;
+			bool timerToggle = true;
 
 			int score = 0;
 		};

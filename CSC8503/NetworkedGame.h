@@ -41,6 +41,8 @@ namespace NCL {
 
 			void AddCubesAroundSphere();
 
+			void AddCubesAroundHome();
+
 			void SpawnBonus();
 
 			void PlaneVsAABB();

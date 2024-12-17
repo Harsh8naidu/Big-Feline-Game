@@ -6,6 +6,7 @@
 #include "Layer.h"
 #include "Debug.h"
 #include <string>
+#include "Window.h"
 
 using std::vector;
 
@@ -112,14 +113,21 @@ namespace NCL::CSC8503 {
 				}
 			}
 
-			if (name == "player" && otherObject->GetName() == "plane") {
-				std::cout << "player has hit the plane" << std::endl;
-				isDoorOpen = true;
+			if (name == "bonus" && otherObject->GetName() == "") {
+				this->SetActive(false);
+				this->SetBoundingVolume(nullptr);
+				isEnemyCollectedBonus = true;
 			}
 
-			if (name == "bonus" && otherObject->GetName() == "") {
-				/*this->SetActive(false);
-				isEnemyCollectedBonus = true;*/
+			if (name == "player" && otherObject->GetName() == "plane") {
+				isDoorOpen = true;
+			}
+			
+			if (name == "player" && otherObject->GetName() == "home") {
+				std::cout << "Kitten has reached home!" << std::endl;
+				this->GetTransform().SetPosition(Vector3(0, 2, -30));
+				score++;
+				
 			}
 		}
 

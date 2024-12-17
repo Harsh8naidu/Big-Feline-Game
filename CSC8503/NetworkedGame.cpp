@@ -229,9 +229,11 @@ void NetworkedGame::UpdateGame(float dt) {
 		angryGoose->Update(dt);
 	}
 
-	/*if (kitten1) {
+	if (kitten1 != nullptr && kitten2 != nullptr && kitten3 != nullptr) {
 		kitten1->Update(dt);
-	}*/
+		kitten2->Update(dt);
+		kitten3->Update(dt);
+	}
 
 	if (!player) {
 		SpawnPlayer(Vector3(0, 2, -30), "player");
@@ -502,12 +504,41 @@ void NetworkedGame::AddCubesAroundSphere() {
 	}
 }
 
+void NetworkedGame::AddCubesAroundHome() {
+	// Adjusted z range to start at -150 and align accordingly
+	for (int z = -150; z <= -102; z += 6) {
+		AddCubeToWorld(Vector3(0, 2, z), Vector3(3, 3, 3), 0);
+		AddCubeToWorld(Vector3(40, 2, z), Vector3(3, 3, 3), 0);
+		AddCubeToWorld(Vector3(0, 8, z), Vector3(3, 3, 3), 0);
+		AddCubeToWorld(Vector3(40, 8, z), Vector3(3, 3, 3), 0);
+	}
+
+	// Adjusted x range to start at 0 and align accordingly
+	for (int x = 0; x <= 40; x += 6) {
+		AddCubeToWorld(Vector3(x, 2, -150), Vector3(3, 3, 3), 0);
+		AddCubeToWorld(Vector3(x, 8, -150), Vector3(3, 3, 3), 0);
+	}
+
+	// Adjust ceiling placement with new x and z ranges
+	for (int z = -153; z <= -105; z += 6) {
+		for (int x = 0; x <= 40; x += 6) {
+			AddCubeToWorld(Vector3(x + 2, 14, z), Vector3(3, 3, 3), 0);
+		}
+	}
+
+	// Add the front wall and leave a gap for the door
+	AddCubeToWorld(Vector3(6.5, 2, -102), Vector3(3, 3, 3), 0);
+	AddCubeToWorld(Vector3(13, 2, -102), Vector3(3, 3, 3), 0);
+	AddCubeToWorld(Vector3(33, 2, -102), Vector3(3, 3, 3), 0);
+	AddCubeToWorld(Vector3(26.5, 2, -102), Vector3(3, 3, 3), 0);
+}
+
 void NetworkedGame::SpawnBonus() {
 	// Add bonus to the world
 	bonus1 = AddBonusToWorld(Vector3(-30, 2, 0));
 	bonus2 = AddBonusToWorld(Vector3(-50, 60.5, 55));
 	bonus3 = AddBonusToWorld(Vector3(-130, 61, 60));
-	bonus4 = AddBonusToWorld(Vector3(20, 3, 70));
+	bonus4 = AddBonusToWorld(Vector3(10, 3, 75));
 	bonus5 = AddBonusToWorld(Vector3(-110, 2, -40));
 	bonus6 = AddBonusToWorld(Vector3(-60, 2, -90));
 	bonus7 = AddBonusToWorld(Vector3(-140, 95, 55));
@@ -542,12 +573,11 @@ void NetworkedGame::OBBvsOBB() {
 }
 
 void NetworkedGame::CapsuleVsCapsule() {
-	AddCapsuleToWorld(Vector3(60, 60, -60), 7, 4, 1);
-	AddCapsuleToWorld(Vector3(60, 30, -60), 7, 4, 1);
+	AddCapsuleToWorld(Vector3(60, 60, -60), 3, 4, 1);
+	AddCapsuleToWorld(Vector3(60, 30, -60), 3, 4, 1);
 	AddCubeToWorld(Vector3(60, 5, -60), Vector3(5, 5, 5), 1);
 	
 }
-
 
 NetworkPlayer* NetworkedGame::SpawnPlayer(Vector3 playerSpawnPosition, std::string playerName) {
 
@@ -563,14 +593,18 @@ void NetworkedGame::StartLevel() {
 	AddFlyingStairs();
 
 	AddDoorPuzzle();
-
 	SpawnBonus();
 	AddMazeToWorld();
 
-	//kitten1 = AddKittensToWorld(Vector3(20, 2, -30));
-
 	player = SpawnPlayer(Vector3(0, 2, -30), "player");
 	player2 = SpawnPlayer(Vector3(0, 2, -60), "player2");
+
+	home = AddKittenHome();
+	AddCubesAroundHome();
+
+	kitten1 = AddKittenToWorld(Vector3(20, 2, -30), player, world, home);
+	kitten2 = AddKittenToWorld(Vector3(-110, 2, -30), player, world, home);
+	kitten3 = AddKittenToWorld(Vector3(10, 2, 30), player, world, home);
 
 	// local player
 	NetworkObject* networkObj = new NetworkObject(*player, 1);

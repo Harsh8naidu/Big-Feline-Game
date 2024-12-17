@@ -44,6 +44,20 @@ StateGameObject::StateGameObject(const std::vector<Vector3>& path, GameObject* p
 		}));
 }
 
+StateGameObject::StateGameObject(GameObject* playerObj, GameWorld* world, GameObject* kittenHome) {
+	player = playerObj;
+	gameWorld = world;
+	home = kittenHome;
+
+	stateMachine = new StateMachine();
+
+	State* followState = new State([&](float dt)->void {
+		this->FollowPlayer(dt);
+		});
+
+	stateMachine->AddState(followState); // Only one state for following
+}
+
 StateGameObject::StateGameObject()
 {
 }
@@ -53,7 +67,10 @@ StateGameObject::~StateGameObject() {
 }
 
 void StateGameObject::Update(float dt) {
-	stateMachine->Update(dt);
+	if (stateMachine != nullptr) {
+		stateMachine->Update(dt);
+	}
+	
 }
 
 void StateGameObject::MoveToWaypoint(float dt) {
@@ -100,6 +117,48 @@ void StateGameObject::ChasePlayer(float dt) {
 	GetPhysicsObject()->AddForce(direction * 5.0f); // Faster speed when chasing
 }
 
+void StateGameObject::FollowPlayer(float dt) {
+	if (!player || !gameWorld || !home) return;
+
+	Vector3 currentPos = GetTransform().GetPosition();
+	Vector3 playerPos = player->GetTransform().GetPosition();
+	Vector3 direction = playerPos - currentPos;
+
+	float distance = Vector::Length(direction);
+	float detectionRange = 10.0f; // Adjust this value as needed
+
+	if (distance > detectionRange) {
+		return; // Player is too far to follow
+	}
+
+	Ray ray(currentPos, Vector::Normalise(direction));
+	RayCollision collision;
+
+	if (gameWorld->Raycast(ray, collision, true)) {
+		Debug::DrawLine(currentPos, playerPos, Vector4(0, 1, 0, 1)); // Visualize the ray in green
+		if (collision.node == home) {
+			// Stop following and clear forces
+			GetPhysicsObject()->ClearForces();
+			stateMachine->Update(0.0f); // Reset state machine or pause updates
+			std::cout << "Kitten has reached home and stopped following the player." << std::endl;
+			return;
+		} else if (collision.node == player) {
+			//if (distance < 10.0f) { // Stay close to the player
+			//	return;
+			//}
+			Vector::Normalise(direction);
+			GetPhysicsObject()->AddForce(direction * 3.0f); // Moderate speed when following
+		}
+		
+		else {
+			GetPhysicsObject()->ClearForces(); // Slow down if the player is not in sight
+		}
+	}
+	else {
+		GetPhysicsObject()->ClearForces(); // Slow down if the player is not in sight
+	}
+}
+
 bool StateGameObject::DetectPlayer() {
 	if (!player || !gameWorld) return false;
 
@@ -119,8 +178,10 @@ bool StateGameObject::DetectPlayer() {
 
 	// Check if the ray hits the player
 	if (gameWorld->Raycast(ray, collision, true)) {
+		std::cout << "Collision node: " << collision.node << std::endl;
+		Debug::DrawLine(currentPos, playerPos, Vector4(1, 0, 0, 1)); // Debugging line to visualize the ray
 		if (collision.node == player) {
-			Debug::DrawLine(currentPos, playerPos, Vector4(1, 0, 0, 1)); // Debugging line to visualize the ray
+			std::cout << "collision exectued" << std::endl;
 
 			static float elapsedTime = 0.0f;
 			float dt = Window::GetWindow()->GetTimer().GetTimeDeltaSeconds();
